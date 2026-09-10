@@ -1,0 +1,7 @@
+{
+  "name": "LinguaPartner",
+  "description": "Real-time conversational AI language partner with 100 practice scenarios, 100 authentic phrases per CEFR level, interactive AI translator, and 10,000-word curriculum.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
