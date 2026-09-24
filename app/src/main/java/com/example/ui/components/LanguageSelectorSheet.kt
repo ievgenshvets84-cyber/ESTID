@@ -44,6 +44,7 @@ import com.example.ui.theme.PrimaryIndigo
 import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,9 +53,11 @@ fun LanguageSelectorSheet(
     currentLevel: ProficiencyLevel,
     onSelectLanguage: (Language) -> Unit,
     onSelectLevel: (ProficiencyLevel) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    nativeLangCode: String = "de"
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = AppLocalization.getStrings(nativeLangCode)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -75,13 +78,13 @@ fun LanguageSelectorSheet(
             ) {
                 Column {
                     Text(
-                        text = "Language & Proficiency",
+                        text = strings.languageProficiencyTitle,
                         color = TextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Customize your target language & partner level",
+                        text = strings.languageProficiencySubtitle,
                         color = TextSecondary,
                         fontSize = 13.sp
                     )
@@ -99,7 +102,7 @@ fun LanguageSelectorSheet(
 
             // Proficiency Level Selector
             Text(
-                text = "YOUR LEVEL",
+                text = strings.cefrPracticeLevelTitle.uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
@@ -146,7 +149,7 @@ fun LanguageSelectorSheet(
 
             // Languages Section
             Text(
-                text = "TARGET LANGUAGE",
+                text = strings.selectTargetLangTitle.uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,

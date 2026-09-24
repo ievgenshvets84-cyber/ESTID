@@ -66,6 +66,7 @@ import com.example.ui.theme.SuccessGreenLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+import com.example.ui.util.AppLocalization
 import com.example.ui.viewmodel.FilterStatus
 
 @Composable
@@ -84,8 +85,10 @@ fun WordExplorerView(
     onToggleMastery: (VocabularyWordEntity) -> Unit,
     onAiDeepDive: (VocabularyWordEntity) -> Unit,
     modifier: Modifier = Modifier,
-    onOpenVerbTable: ((VocabularyWordEntity) -> Unit)? = null
+    onOpenVerbTable: ((VocabularyWordEntity) -> Unit)? = null,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
     val focusManager = LocalFocusManager.current
     var showRankDialog by remember { mutableStateOf(false) }
     var rankInput by remember { mutableStateOf("") }
@@ -103,7 +106,7 @@ fun WordExplorerView(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChanged,
-                placeholder = { Text("Search 10,000 words or meanings...", style = MaterialTheme.typography.bodyMedium) },
+                placeholder = { Text(strings.searchPlaceholder, style = MaterialTheme.typography.bodyMedium) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = TextSecondary)
                 },
@@ -139,7 +142,7 @@ fun WordExplorerView(
                     .testTag("jump_rank_chip")
             ) {
                 Text(
-                    text = "Rank #",
+                    text = "#",
                     style = MaterialTheme.typography.labelMedium,
                     color = PrimaryIndigo,
                     fontWeight = FontWeight.Bold,
@@ -164,7 +167,7 @@ fun WordExplorerView(
                     OutlinedTextField(
                         value = rankInput,
                         onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 5) rankInput = it },
-                        placeholder = { Text("Enter 1 – 10,000", fontSize = 13.sp) },
+                        placeholder = { Text(strings.enterRankPlaceholder, fontSize = 13.sp) },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
@@ -193,7 +196,7 @@ fun WordExplorerView(
                         }
                     ) {
                         Text(
-                            text = "Jump",
+                            text = strings.jumpButton,
                             color = Color.White,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
@@ -208,7 +211,7 @@ fun WordExplorerView(
 
         // Stages Carousel (Stage 1 to 100)
         Text(
-            text = "100-Word Stages (1 to 100):",
+            text = "${strings.stageLabel} (1 – $totalStages):",
             style = MaterialTheme.typography.labelSmall,
             color = TextSecondary,
             fontWeight = FontWeight.SemiBold
@@ -237,7 +240,7 @@ fun WordExplorerView(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Stage $stage",
+                            text = "${strings.stageLabel} $stage",
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isSelected) Color.White else TextPrimary,
                             fontWeight = FontWeight.Bold
@@ -262,11 +265,11 @@ fun WordExplorerView(
             FilterStatus.entries.forEach { status ->
                 val isSelected = (filterStatus == status)
                 val label = when (status) {
-                    FilterStatus.ALL -> "All (${words.size})"
-                    FilterStatus.VERBS -> "Verbs"
-                    FilterStatus.TO_LEARN -> "To Learn"
-                    FilterStatus.MASTERED -> "Mastered"
-                    FilterStatus.BOOKMARKED -> "Saved"
+                    FilterStatus.ALL -> "${strings.filterAll} (${words.size})"
+                    FilterStatus.VERBS -> strings.filterVerbs
+                    FilterStatus.TO_LEARN -> strings.filterToLearn
+                    FilterStatus.MASTERED -> strings.filterMastered
+                    FilterStatus.BOOKMARKED -> strings.filterBookmarked
                 }
 
                 FilterChip(
@@ -293,7 +296,7 @@ fun WordExplorerView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No words matching filter in this stage.",
+                    text = strings.noWordsFound,
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )

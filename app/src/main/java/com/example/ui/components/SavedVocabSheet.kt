@@ -46,6 +46,7 @@ import com.example.ui.theme.PrimaryIndigo
 import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,9 +55,11 @@ fun SavedVocabSheet(
     onSpeakWord: (String) -> Unit,
     onDeleteWord: (String) -> Unit,
     onOpenWordLearning: (() -> Unit)? = null,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    nativeLangCode: String = "de"
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = AppLocalization.getStrings(nativeLangCode)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -93,13 +96,13 @@ fun SavedVocabSheet(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Saved Vocabulary",
+                            text = strings.savedVocabTitle,
                             color = TextPrimary,
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${savedWords.size} phrases & words learned",
+                            text = "${savedWords.size} ${strings.savedVocabCountLabel}",
                             color = TextSecondary,
                             fontSize = 13.sp
                         )
@@ -150,13 +153,13 @@ fun SavedVocabSheet(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "10,000 Words Curriculum",
+                                text = strings.wordsCurriculumBannerTitle,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryIndigo
                             )
                             Text(
-                                text = "Flashcards, quizzes, & CEFR frequency ranks A1 to C2",
+                                text = strings.wordsCurriculumBannerSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -178,12 +181,12 @@ fun SavedVocabSheet(
                         Text(text = "📖", fontSize = 32.sp)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No saved words yet",
+                            text = strings.noSavedWordsTitle,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = "Tap the bookmark icon on any message to save it here!",
+                            text = strings.noSavedWordsSubtitle,
                             color = TextSecondary,
                             fontSize = 13.sp
                         )

@@ -20,6 +20,8 @@ object VerbConjugationEngine {
             "ja" -> generateJapaneseConjugations(infinitive, meaning)
             "zh" -> generateChineseConjugations(infinitive, meaning)
             "ko" -> generateKoreanConjugations(infinitive, meaning)
+            "uk" -> generateUkrainianConjugations(infinitive, meaning)
+            "ru" -> generateRussianConjugations(infinitive, meaning)
             else -> generateEnglishConjugations(infinitive, meaning)
         }
     }
@@ -1154,5 +1156,852 @@ object VerbConjugationEngine {
             pastParticiple = "${root}은/ㄴ",
             tenses = tenses
         )
+    }
+
+    // ==========================================
+    // SLAVIC VERB STRUCTURE & CONJUGATIONS
+    // ==========================================
+    private data class SlavicVerbForms(
+        val pres: List<String>,
+        val pastM: String,
+        val pastF: String,
+        val pastN: String,
+        val pastPl: String,
+        val fut: List<String>,
+        val impSg: String,
+        val impPl: String,
+        val gerund: String,
+        val participle: String,
+        val typeDesc: String
+    )
+
+    // ==========================================
+    // UKRAINIAN CONJUGATIONS (Українські дієвідміни)
+    // ==========================================
+    private fun generateUkrainianConjugations(verb: String, meaning: String): VerbTableData {
+        val cleanVerb = verb.trim().lowercase()
+        val isReflexive = cleanVerb.endsWith("ся") || cleanVerb.endsWith("сь")
+        val base = if (isReflexive) cleanVerb.removeSuffix("ся").removeSuffix("сь") else cleanVerb
+
+        val knownUkrVerbs = mapOf(
+            "бути" to SlavicVerbForms(
+                pres = listOf("є", "є", "є", "є", "є", "є"),
+                pastM = "був", pastF = "була", pastN = "було", pastPl = "були",
+                fut = listOf("буду", "будеш", "буде", "будемо", "будете", "будуть"),
+                impSg = "будь", impPl = "будьте",
+                gerund = "будучи", participle = "бувалий",
+                typeDesc = "Неправильне дієслово (бути)"
+            ),
+            "робити" to SlavicVerbForms(
+                pres = listOf("роблю", "робиш", "робить", "робимо", "робите", "роблять"),
+                pastM = "робив", pastF = "робила", pastN = "робило", pastPl = "робили",
+                fut = listOf("буду робити", "будеш робити", "буде робити", "будемо робити", "будете робити", "будуть робити"),
+                impSg = "роби", impPl = "робіть",
+                gerund = "роблячи", participle = "зроблений",
+                typeDesc = "2-ге дієвідмінювання (-ити)"
+            ),
+            "говорити" to SlavicVerbForms(
+                pres = listOf("говорю", "говориш", "говорить", "говоримо", "говорите", "говорять"),
+                pastM = "говорив", pastF = "говорила", pastN = "говорило", pastPl = "говорили",
+                fut = listOf("буду говорити", "будеш говорити", "буде говорити", "будемо говорити", "будете говорити", "будуть говорити"),
+                impSg = "говори", impPl = "говоріть",
+                gerund = "говорячи", participle = "сказаний",
+                typeDesc = "2-ге дієвідмінювання (-ити)"
+            ),
+            "знати" to SlavicVerbForms(
+                pres = listOf("знаю", "знаєш", "знає", "знаємо", "знаєте", "знають"),
+                pastM = "знав", pastF = "знала", pastN = "знало", pastPl = "знали",
+                fut = listOf("буду знати", "будеш знати", "буде знати", "будемо знати", "будете знати", "будуть знати"),
+                impSg = "знай", impPl = "знайте",
+                gerund = "знаючи", participle = "знаний",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "йти" to SlavicVerbForms(
+                pres = listOf("йду", "йдеш", "йде", "йдемо", "йдете", "йдуть"),
+                pastM = "йшов", pastF = "йшла", pastN = "йшло", pastPl = "йшли",
+                fut = listOf("буду йти", "будеш йти", "буде йти", "будемо йти", "будете йти", "будуть йти"),
+                impSg = "йди", impPl = "йдіть",
+                gerund = "йдучи", participle = "пройдений",
+                typeDesc = "Неправильне дієслово (йти)"
+            ),
+            "ходити" to SlavicVerbForms(
+                pres = listOf("ходжу", "ходиш", "ходить", "ходимо", "ходите", "ходять"),
+                pastM = "ходив", pastF = "ходила", pastN = "ходило", pastPl = "ходили",
+                fut = listOf("буду ходити", "будеш ходити", "буде ходити", "будемо ходити", "будете ходити", "будуть ходити"),
+                impSg = "ходи", impPl = "ходіть",
+                gerund = "ходячи", participle = "пройдений",
+                typeDesc = "2-ге дієвідмінювання (д / дж)"
+            ),
+            "бачити" to SlavicVerbForms(
+                pres = listOf("бачу", "бачиш", "бачить", "бачимо", "бачите", "бачать"),
+                pastM = "бачив", pastF = "бачила", pastN = "бачило", pastPl = "бачили",
+                fut = listOf("буду бачити", "будеш бачити", "буде бачити", "будемо бачити", "будете бачити", "будуть бачити"),
+                impSg = "бач", impPl = "бачте",
+                gerund = "бачачи", participle = "бачений",
+                typeDesc = "2-ге дієвідмінювання (ч / ч)"
+            ),
+            "думати" to SlavicVerbForms(
+                pres = listOf("думаю", "думаєш", "думає", "думаємо", "думаєте", "думають"),
+                pastM = "думав", pastF = "думала", pastN = "думало", pastPl = "думали",
+                fut = listOf("буду думати", "будеш думати", "буде думати", "будемо думати", "будете думати", "будуть думати"),
+                impSg = "думай", impPl = "думайте",
+                gerund = "думаючи", participle = "продуманий",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "хотіти" to SlavicVerbForms(
+                pres = listOf("хочу", "хочеш", "хоче", "хочемо", "хочете", "хочуть"),
+                pastM = "хотів", pastF = "хотіла", pastN = "хотіло", pastPl = "хотіли",
+                fut = listOf("буду хотіти", "будеш хотіти", "буде хотіти", "будемо хотіти", "будете хотіти", "будуть хотіти"),
+                impSg = "хочи", impPl = "хочіть",
+                gerund = "хотячи", participle = "бажаний",
+                typeDesc = "Різновідмінюване дієслово"
+            ),
+            "могти" to SlavicVerbForms(
+                pres = listOf("можу", "можеш", "може", "можемо", "можете", "можуть"),
+                pastM = "міг", pastF = "могла", pastN = "могло", pastPl = "могли",
+                fut = listOf("зможу", "зможеш", "зможе", "зможемо", "зможете", "зможуть"),
+                impSg = "можи", impPl = "можіть",
+                gerund = "можучи", participle = "можливий",
+                typeDesc = "1-ше дієвідмінювання (г / ж)"
+            ),
+            "жити" to SlavicVerbForms(
+                pres = listOf("живу", "живеш", "живе", "живемо", "живете", "живуть"),
+                pastM = "жив", pastF = "жила", pastN = "жило", pastPl = "жили",
+                fut = listOf("буду жити", "будеш жити", "буде жити", "будемо жити", "будете жити", "будуть жити"),
+                impSg = "живи", impPl = "живіть",
+                gerund = "живучи", participle = "прожитий",
+                typeDesc = "1-ше дієвідмінювання"
+            ),
+            "писати" to SlavicVerbForms(
+                pres = listOf("пишу", "пишеш", "пише", "пишемо", "пишете", "пишуть"),
+                pastM = "писав", pastF = "писала", pastN = "писало", pastPl = "писали",
+                fut = listOf("буду писати", "будеш писати", "буде писати", "будемо писати", "будете писати", "будуть писати"),
+                impSg = "пиши", impPl = "пишіть",
+                gerund = "пишучи", participle = "написаний",
+                typeDesc = "1-ше дієвідмінювання (с / ш)"
+            ),
+            "читати" to SlavicVerbForms(
+                pres = listOf("читаю", "читаєш", "читає", "читаємо", "читаєте", "читають"),
+                pastM = "читав", pastF = "читала", pastN = "читало", pastPl = "читали",
+                fut = listOf("буду читати", "будеш читати", "буде читати", "будемо читати", "будете читати", "будуть читати"),
+                impSg = "читай", impPl = "читайте",
+                gerund = "читаючи", participle = "прочитаний",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "любити" to SlavicVerbForms(
+                pres = listOf("люблю", "любиш", "любить", "любимо", "любите", "люблять"),
+                pastM = "любив", pastF = "любила", pastN = "любило", pastPl = "любили",
+                fut = listOf("буду любити", "будеш любити", "буде любити", "будемо любити", "будете любити", "будуть любити"),
+                impSg = "люби", impPl = "любіть",
+                gerund = "люблячи", participle = "улюблений",
+                typeDesc = "2-ге дієвідмінювання (вставний л)"
+            ),
+            "чути" to SlavicVerbForms(
+                pres = listOf("чую", "чуєш", "чує", "чуємо", "чуєте", "чують"),
+                pastM = "чув", pastF = "чула", pastN = "чуло", pastPl = "чули",
+                fut = listOf("буду чути", "будеш чути", "буде чути", "будемо чути", "будете чути", "будуть чути"),
+                impSg = "чуй", impPl = "чуйте",
+                gerund = "чуючи", participle = "почутий",
+                typeDesc = "1-ше дієвідмінювання"
+            ),
+            "їсти" to SlavicVerbForms(
+                pres = listOf("їм", "їси", "їсть", "їмо", "їсте", "їдять"),
+                pastM = "їв", pastF = "їла", pastN = "їло", pastPl = "їли",
+                fut = listOf("буду їсти", "будеш їсти", "буде їсти", "будемо їсти", "будете їсти", "будуть їсти"),
+                impSg = "їж", impPl = "їжте",
+                gerund = "їдячи", participle = "з'їдений",
+                typeDesc = "Атематичне дієслово"
+            ),
+            "пити" to SlavicVerbForms(
+                pres = listOf("п'ю", "п'єш", "п'є", "п'ємо", "п'єте", "п'ють"),
+                pastM = "пив", pastF = "пила", pastN = "пило", pastPl = "пили",
+                fut = listOf("буду пити", "будеш пити", "буде пити", "будемо пити", "будете пити", "будуть пити"),
+                impSg = "пий", impPl = "пийте",
+                gerund = "п'ючи", participle = "випитий",
+                typeDesc = "1-ше дієвідмінювання"
+            ),
+            "спати" to SlavicVerbForms(
+                pres = listOf("сплю", "спиш", "спить", "спимо", "спите", "сплять"),
+                pastM = "спав", pastF = "спала", pastN = "спало", pastPl = "спали",
+                fut = listOf("буду спати", "будеш спати", "буде спати", "будемо спати", "будете спати", "будуть спати"),
+                impSg = "спи", impPl = "спите",
+                gerund = "сплячи", participle = "виспаний",
+                typeDesc = "2-ге дієвідмінювання (вставний л)"
+            ),
+            "мати" to SlavicVerbForms(
+                pres = listOf("маю", "маєш", "має", "маємо", "маєте", "мають"),
+                pastM = "мав", pastF = "мала", pastN = "мало", pastPl = "мали",
+                fut = listOf("буду мати", "будеш мати", "буде мати", "будемо мати", "будете мати", "будуть мати"),
+                impSg = "май", impPl = "майте",
+                gerund = "маючи", participle = "нажитий",
+                typeDesc = "1-ше дієвідмінювання"
+            ),
+            "розуміти" to SlavicVerbForms(
+                pres = listOf("розумію", "розумієш", "розуміє", "розуміємо", "розумієте", "розуміють"),
+                pastM = "розумів", pastF = "розуміла", pastN = "розуміло", pastPl = "розуміли",
+                fut = listOf("буду розуміти", "будеш розуміти", "буде розуміти", "будемо розуміти", "будете розуміти", "будуть розуміти"),
+                impSg = "розумій", impPl = "розумійте",
+                gerund = "розуміючи", participle = "зрозумілий",
+                typeDesc = "1-ше дієвідмінювання (-іти)"
+            ),
+            "працювати" to SlavicVerbForms(
+                pres = listOf("працюю", "працюєш", "працює", "працюємо", "працюєте", "працюють"),
+                pastM = "працював", pastF = "працювала", pastN = "працювало", pastPl = "працювали",
+                fut = listOf("буду працювати", "будеш працювати", "буде працювати", "будемо працювати", "будете працювати", "будуть працювати"),
+                impSg = "працюй", impPl = "працюйте",
+                gerund = "працюючи", participle = "опрацьований",
+                typeDesc = "1-ше дієвідмінювання (-увати)"
+            ),
+            "вчити" to SlavicVerbForms(
+                pres = listOf("вчу", "вчиш", "вчить", "вчимо", "вчите", "вчать"),
+                pastM = "вчив", pastF = "вчила", pastN = "вчило", pastPl = "вчили",
+                fut = listOf("буду вчити", "будеш вчити", "буде вчити", "будемо вчити", "будете вчити", "будуть вчити"),
+                impSg = "вчи", impPl = "вчіть",
+                gerund = "вчачи", participle = "вивчений",
+                typeDesc = "2-ге дієвідмінювання (-ити)"
+            ),
+            "брати" to SlavicVerbForms(
+                pres = listOf("беру", "береш", "бере", "беремо", "берете", "беруть"),
+                pastM = "брав", pastF = "брала", pastN = "брало", pastPl = "брали",
+                fut = listOf("буду брати", "будеш брати", "буде брати", "будемо брати", "будете брати", "будуть брати"),
+                impSg = "бери", impPl = "беріть",
+                gerund = "беручи", participle = "узятий",
+                typeDesc = "1-ше дієвідмінювання"
+            ),
+            "дати" to SlavicVerbForms(
+                pres = listOf("дам", "даси", "дасть", "дамо", "дасте", "дадуть"),
+                pastM = "дав", pastF = "дала", pastN = "дало", pastPl = "дали",
+                fut = listOf("дам", "даси", "дасть", "дамо", "дасте", "дадуть"),
+                impSg = "дай", impPl = "дайте",
+                gerund = "даючи", participle = "даний",
+                typeDesc = "Атематичне дієслово"
+            ),
+            "казати" to SlavicVerbForms(
+                pres = listOf("кажу", "кажеш", "каже", "кажемо", "кажете", "кажуть"),
+                pastM = "казав", pastF = "казала", pastN = "казало", pastPl = "казали",
+                fut = listOf("буду казати", "будеш казати", "буде казати", "будемо казати", "будете казати", "будуть казати"),
+                impSg = "кажи", impPl = "кажіть",
+                gerund = "кажучи", participle = "сказаний",
+                typeDesc = "1-ше дієвідмінювання (з / ж)"
+            ),
+            "допомагати" to SlavicVerbForms(
+                pres = listOf("допомагаю", "допомагаєш", "допомагає", "допомагаємо", "допомагаєте", "допомагають"),
+                pastM = "допомагав", pastF = "допомагала", pastN = "допомагало", pastPl = "допомагали",
+                fut = listOf("буду допомагати", "будеш допомагати", "буде допомагати", "будемо допомагати", "будете допомагати", "будуть допомагати"),
+                impSg = "допомагай", impPl = "допомагайте",
+                gerund = "допомагаючи", participle = "наданий",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "чекати" to SlavicVerbForms(
+                pres = listOf("чекаю", "чекаєш", "чекає", "чекаємо", "чекаєте", "чекають"),
+                pastM = "чекав", pastF = "чекала", pastN = "чекало", pastPl = "чекали",
+                fut = listOf("буду чекати", "будеш чекати", "буде чекати", "будемо чекати", "будете чекати", "будуть чекати"),
+                impSg = "чекай", impPl = "чекайте",
+                gerund = "чекаючи", participle = "очікуваний",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "шукати" to SlavicVerbForms(
+                pres = listOf("шукаю", "шукаєш", "шукає", "шукаємо", "шукаєте", "шукають"),
+                pastM = "шукав", pastF = "шукала", pastN = "шукало", pastPl = "шукали",
+                fut = listOf("буду шукати", "будеш шукати", "буде шукати", "будемо шукати", "будете шукати", "будуть шукати"),
+                impSg = "шукай", impPl = "шукайте",
+                gerund = "шукаючи", participle = "знайдений",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            ),
+            "купувати" to SlavicVerbForms(
+                pres = listOf("купую", "купуєш", "купує", "купуємо", "купуєте", "купують"),
+                pastM = "купував", pastF = "купувала", pastN = "купувало", pastPl = "купували",
+                fut = listOf("буду купувати", "будеш купувати", "буде купувати", "будемо купувати", "будете купувати", "будуть купувати"),
+                impSg = "купуй", impPl = "купуйте",
+                gerund = "купуючи", participle = "куплений",
+                typeDesc = "1-ше дієвідмінювання (-увати)"
+            ),
+            "слухати" to SlavicVerbForms(
+                pres = listOf("слухаю", "слухаєш", "слухає", "слухаємо", "слухаєте", "слухають"),
+                pastM = "слухав", pastF = "слухала", pastN = "слухало", pastPl = "слухали",
+                fut = listOf("буду слухати", "будеш слухати", "буде слухати", "будемо слухати", "будете слухати", "будуть слухати"),
+                impSg = "слухай", impPl = "слухайте",
+                gerund = "слухаючи", participle = "послуханий",
+                typeDesc = "1-ше дієвідмінювання (-ати)"
+            )
+        )
+
+        val verbData = knownUkrVerbs[base] ?: run {
+            // Algorithmic fallback based on Ukrainian grammar rules
+            when {
+                base.endsWith("увати") || base.endsWith("ювати") -> {
+                    val stem = base.removeSuffix("увати").removeSuffix("ювати")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ую", "${stem}уєш", "${stem}ує", "${stem}уємо", "${stem}уєте", "${stem}ують"),
+                        pastM = "${stem}ував", pastF = "${stem}увала", pastN = "${stem}увало", pastPl = "${stem}ували",
+                        fut = listOf("буду $cleanVerb", "будеш $cleanVerb", "буде $cleanVerb", "будемо $cleanVerb", "будете $cleanVerb", "будуть $cleanVerb"),
+                        impSg = "${stem}уй", impPl = "${stem}уйте",
+                        gerund = "${stem}уючи", participle = "${stem}ований",
+                        typeDesc = "1-ше дієвідмінювання (-увати)"
+                    )
+                }
+                base.endsWith("ати") || base.endsWith("яти") -> {
+                    val stem = base.removeSuffix("ти")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ю", "${stem}єш", "${stem}є", "${stem}ємо", "${stem}єте", "${stem}ють"),
+                        pastM = "${stem}в", pastF = "${stem}ла", pastN = "${stem}ло", pastPl = "${stem}ли",
+                        fut = listOf("буду $cleanVerb", "будеш $cleanVerb", "буде $cleanVerb", "будемо $cleanVerb", "будете $cleanVerb", "будуть $cleanVerb"),
+                        impSg = "${stem}й", impPl = "${stem}йте",
+                        gerund = "${stem}ючи", participle = "${stem}ний",
+                        typeDesc = "1-ше дієвідмінювання (-ати)"
+                    )
+                }
+                base.endsWith("ити") || base.endsWith("іти") -> {
+                    val stem = base.removeSuffix("ити").removeSuffix("іти")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ю", "${stem}иш", "${stem}ить", "${stem}имо", "${stem}ите", "${stem}ять"),
+                        pastM = "${stem}ив", pastF = "${stem}ила", pastN = "${stem}ило", pastPl = "${stem}или",
+                        fut = listOf("буду $cleanVerb", "будеш $cleanVerb", "буде $cleanVerb", "будемо $cleanVerb", "будете $cleanVerb", "будуть $cleanVerb"),
+                        impSg = "${stem}и", impPl = "${stem}іть",
+                        gerund = "${stem}ячи", participle = "${stem}ений",
+                        typeDesc = "2-ге дієвідмінювання (-ити/-іти)"
+                    )
+                }
+                else -> {
+                    val stem = base.removeSuffix("ти")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}у", "${stem}еш", "${stem}е", "${stem}емо", "${stem}ете", "${stem}уть"),
+                        pastM = "${stem}в", pastF = "${stem}ла", pastN = "${stem}ло", pastPl = "${stem}ли",
+                        fut = listOf("буду $cleanVerb", "будеш $cleanVerb", "буде $cleanVerb", "будемо $cleanVerb", "будете $cleanVerb", "будуть $cleanVerb"),
+                        impSg = "${stem}и", impPl = "${stem}іть",
+                        gerund = "${stem}учи", participle = "${stem}ений",
+                        typeDesc = "Дієвідмінювання дієслова"
+                    )
+                }
+            }
+        }
+
+        val pronouns = listOf("я", "ти", "він / вона / воно", "ми", "ви", "вони")
+
+        val presentTense = TenseConjugation(
+            tenseName = "Теперішній час (Present Tense)",
+            tenseCategory = "Indicative",
+            description = "Описує дії, що відбуваються в момент мовлення, постійні стани або регулярні процеси.",
+            forms = pronouns.mapIndexed { idx, p ->
+                val form = verbData.pres[idx]
+                ConjugatedForm(
+                    pronoun = p,
+                    form = form,
+                    phonetic = ukrainianPhonetic(form),
+                    translation = "$p $meaning",
+                    exampleSentence = "$p $form щодня."
+                )
+            }
+        )
+
+        val pastTense = TenseConjugation(
+            tenseName = "Минулий час (Past Tense)",
+            tenseCategory = "Indicative",
+            description = "Описує дії, завершені або тривалі в минулому. Змінюється за родами (ч., ж., ср.) та числами.",
+            forms = listOf(
+                ConjugatedForm("я (ч. / ж.)", "${verbData.pastM} / ${verbData.pastF}", ukrainianPhonetic(verbData.pastM), "I $meaning (past)", "Я вже це робив / робила."),
+                ConjugatedForm("ти (ч. / ж.)", "${verbData.pastM} / ${verbData.pastF}", ukrainianPhonetic(verbData.pastM), "you $meaning (past)", "Ти вчора успішно ${verbData.pastM}."),
+                ConjugatedForm("він (Masculine)", verbData.pastM, ukrainianPhonetic(verbData.pastM), "he $meaning", "Він вчора ${verbData.pastM}."),
+                ConjugatedForm("вона (Feminine)", verbData.pastF, ukrainianPhonetic(verbData.pastF), "she $meaning", "Вона вчора ${verbData.pastF}."),
+                ConjugatedForm("воно (Neuter)", verbData.pastN, ukrainianPhonetic(verbData.pastN), "it $meaning", "Воно вже ${verbData.pastN}."),
+                ConjugatedForm("ми / ви / вони (Plural)", verbData.pastPl, ukrainianPhonetic(verbData.pastPl), "we / you / they $meaning", "Ми разом учора ${verbData.pastPl}.")
+            )
+        )
+
+        val futureTense = TenseConjugation(
+            tenseName = "Майбутній час (Future Tense)",
+            tenseCategory = "Indicative",
+            description = "Дії, які відбудуться в майбутньому (складена аналітична форма: бути + інфінітив).",
+            forms = pronouns.mapIndexed { idx, p ->
+                val form = verbData.fut[idx]
+                ConjugatedForm(
+                    pronoun = p,
+                    form = form,
+                    phonetic = ukrainianPhonetic(form),
+                    translation = "will $meaning",
+                    exampleSentence = "$p обов'язково $form."
+                )
+            }
+        )
+
+        val imperativeTense = TenseConjugation(
+            tenseName = "Наказовий спосіб (Imperative)",
+            tenseCategory = "Imperative",
+            description = "Спонукання до дії, заклик або ввічливе прохання.",
+            forms = listOf(
+                ConjugatedForm("ти (Informal)", "${verbData.impSg}!", ukrainianPhonetic(verbData.impSg), "do $meaning!", "${verbData.impSg}, будь ласка!"),
+                ConjugatedForm("ми (Заклик / Інклюзив)", "${verbData.impPl.removeSuffix("те").removeSuffix("ть")}мо!", ukrainianPhonetic(verbData.impPl), "let's $meaning!", "Давайте разом ${verbData.impPl.removeSuffix("те").removeSuffix("ть")}мо!"),
+                ConjugatedForm("ви (Formal / Plural)", "${verbData.impPl}!", ukrainianPhonetic(verbData.impPl), "please $meaning!", "${verbData.impPl}, будь ласка!")
+            )
+        )
+
+        return VerbTableData(
+            infinitive = verb,
+            languageCode = "uk",
+            englishMeaning = meaning,
+            regularType = verbData.typeDesc,
+            auxiliaryVerb = "бути (буду, будеш...)",
+            gerund = verbData.gerund,
+            gerundPhonetic = ukrainianPhonetic(verbData.gerund),
+            pastParticiple = verbData.participle,
+            pastParticiplePhonetic = ukrainianPhonetic(verbData.participle),
+            tenses = listOf(presentTense, pastTense, futureTense, imperativeTense)
+        )
+    }
+
+    // ==========================================
+    // RUSSIAN CONJUGATIONS (Русские спряжения)
+    // ==========================================
+    private fun generateRussianConjugations(verb: String, meaning: String): VerbTableData {
+        val cleanVerb = verb.trim().lowercase()
+        val isReflexive = cleanVerb.endsWith("ся") || cleanVerb.endsWith("сь")
+        val base = if (isReflexive) cleanVerb.removeSuffix("ся").removeSuffix("сь") else cleanVerb
+
+        val knownRuVerbs = mapOf(
+            "быть" to SlavicVerbForms(
+                pres = listOf("есть", "есть", "есть", "есть", "есть", "есть"),
+                pastM = "был", pastF = "была", pastN = "было", pastPl = "были",
+                fut = listOf("буду", "будешь", "будет", "будем", "будете", "будут"),
+                impSg = "будь", impPl = "будьте",
+                gerund = "будучи", participle = "бывший",
+                typeDesc = "Неправильный глагол (быть)"
+            ),
+            "делать" to SlavicVerbForms(
+                pres = listOf("делаю", "делаешь", "делает", "делаем", "делаете", "делают"),
+                pastM = "делал", pastF = "делала", pastN = "делало", pastPl = "делали",
+                fut = listOf("буду делать", "будешь делать", "будет делать", "будем делать", "будете делать", "будут делать"),
+                impSg = "делай", impPl = "делайте",
+                gerund = "делая", participle = "сделанный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "говорить" to SlavicVerbForms(
+                pres = listOf("говорю", "говоришь", "говорит", "говорим", "говорите", "говорят"),
+                pastM = "говорил", pastF = "говорила", pastN = "говорило", pastPl = "говорили",
+                fut = listOf("буду говорить", "будешь говорить", "будет говорить", "будем говорить", "будете говорить", "будут говорить"),
+                impSg = "говори", impPl = "говорите",
+                gerund = "говоря", participle = "сказанный",
+                typeDesc = "2-е спряжение (-ить)"
+            ),
+            "знать" to SlavicVerbForms(
+                pres = listOf("знаю", "знаешь", "знает", "знаем", "знаете", "знают"),
+                pastM = "знал", pastF = "знала", pastN = "знало", pastPl = "знали",
+                fut = listOf("буду знать", "будешь знать", "будет знать", "будем знать", "будете знать", "будут знать"),
+                impSg = "знай", impPl = "знайте",
+                gerund = "зная", participle = "знаемый",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "идти" to SlavicVerbForms(
+                pres = listOf("иду", "идёшь", "идёт", "идём", "идёте", "идут"),
+                pastM = "шёл", pastF = "шла", pastN = "шло", pastPl = "шли",
+                fut = listOf("буду идти", "будешь идти", "будет идти", "будем идти", "будете идти", "будут идти"),
+                impSg = "иди", impPl = "идите",
+                gerund = "идя", participle = "пройденный",
+                typeDesc = "Неправильный глагол (идти)"
+            ),
+            "ходить" to SlavicVerbForms(
+                pres = listOf("хожу", "ходишь", "ходит", "ходим", "ходите", "ходят"),
+                pastM = "ходил", pastF = "ходила", pastN = "ходило", pastPl = "ходили",
+                fut = listOf("буду ходить", "будешь ходить", "будет ходить", "будем ходить", "будете ходить", "будут ходить"),
+                impSg = "ходи", impPl = "ходите",
+                gerund = "ходя", participle = "пройденный",
+                typeDesc = "2-е спряжение (д / ж)"
+            ),
+            "видеть" to SlavicVerbForms(
+                pres = listOf("вижу", "видишь", "видит", "видим", "видите", "видят"),
+                pastM = "видел", pastF = "видела", pastN = "видело", pastPl = "видели",
+                fut = listOf("буду видеть", "будешь видеть", "будет видеть", "будем видеть", "будете видеть", "будут видеть"),
+                impSg = "смотри", impPl = "смотрите",
+                gerund = "видя", participle = "виденный",
+                typeDesc = "2-е спряжение (исключение на -еть)"
+            ),
+            "думать" to SlavicVerbForms(
+                pres = listOf("думаю", "думаешь", "думает", "думаем", "думаете", "думают"),
+                pastM = "думал", pastF = "думала", pastN = "думало", pastPl = "думали",
+                fut = listOf("буду думать", "будешь думать", "будет думать", "будем думать", "будете думать", "будут думать"),
+                impSg = "думай", impPl = "думайте",
+                gerund = "думая", participle = "продуманный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "хотеть" to SlavicVerbForms(
+                pres = listOf("хочу", "хочешь", "хочет", "хотим", "хотите", "хотят"),
+                pastM = "хотел", pastF = "хотела", pastN = "хотело", pastPl = "хотели",
+                fut = listOf("буду хотеть", "будешь хотеть", "будет хотеть", "будем хотеть", "будете хотеть", "будут хотеть"),
+                impSg = "хоти", impPl = "хотите",
+                gerund = "хотя", participle = "желанный",
+                typeDesc = "Разноспрягаемый глагол"
+            ),
+            "мочь" to SlavicVerbForms(
+                pres = listOf("могу", "можешь", "может", "можем", "можете", "могут"),
+                pastM = "мог", pastF = "могла", pastN = "могло", pastPl = "могли",
+                fut = listOf("смогу", "сможешь", "сможет", "сможем", "сможете", "смогут"),
+                impSg = "моги", impPl = "могите",
+                gerund = "моля", participle = "возможный",
+                typeDesc = "1-е спряжение (г / ж)"
+            ),
+            "жить" to SlavicVerbForms(
+                pres = listOf("живу", "живёшь", "живёт", "живём", "живёте", "живут"),
+                pastM = "жил", pastF = "жила", pastN = "жило", pastPl = "жили",
+                fut = listOf("буду жить", "будешь жить", "будет жить", "будем жить", "будете жить", "будут жить"),
+                impSg = "живи", impPl = "живите",
+                gerund = "живя", participle = "прожитый",
+                typeDesc = "1-е спряжение"
+            ),
+            "писать" to SlavicVerbForms(
+                pres = listOf("пишу", "пишешь", "пишет", "пишем", "пишете", "пишут"),
+                pastM = "писал", pastF = "писала", pastN = "писало", pastPl = "писали",
+                fut = listOf("буду писать", "будешь писать", "будет писать", "будем писать", "будете писать", "будут писать"),
+                impSg = "пиши", impPl = "пишите",
+                gerund = "пиша", participle = "написанный",
+                typeDesc = "1-е спряжение (с / ш)"
+            ),
+            "читать" to SlavicVerbForms(
+                pres = listOf("читаю", "читаешь", "читает", "читаем", "читаете", "читают"),
+                pastM = "читал", pastF = "читала", pastN = "читало", pastPl = "читали",
+                fut = listOf("буду читать", "будешь читать", "будет читать", "будем читать", "будете читать", "будут читать"),
+                impSg = "читай", impPl = "читайте",
+                gerund = "читая", participle = "прочитанный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "любить" to SlavicVerbForms(
+                pres = listOf("люблю", "любишь", "любит", "любим", "любите", "любят"),
+                pastM = "любил", pastF = "любила", pastN = "любило", pastPl = "любили",
+                fut = listOf("буду любить", "будешь любить", "будет любить", "будем любить", "будете любить", "будут любить"),
+                impSg = "люби", impPl = "любите",
+                gerund = "любя", participle = "любимый",
+                typeDesc = "2-е спряжение (вставная л)"
+            ),
+            "слышать" to SlavicVerbForms(
+                pres = listOf("слышу", "слышишь", "слышит", "слышим", "слышите", "слышат"),
+                pastM = "слышал", pastF = "слышала", pastN = "слышало", pastPl = "слышали",
+                fut = listOf("буду слышать", "будешь слышать", "будет слышать", "будем слышать", "будете слышать", "будут слышать"),
+                impSg = "слушай", impPl = "слушайте",
+                gerund = "слыша", participle = "услышанный",
+                typeDesc = "2-е спряжение (исключение на -ать)"
+            ),
+            "есть" to SlavicVerbForms(
+                pres = listOf("ем", "ешь", "ест", "едим", "едите", "едят"),
+                pastM = "ел", pastF = "ела", pastN = "ело", pastPl = "ели",
+                fut = listOf("буду есть", "будешь есть", "будет есть", "будем есть", "будете есть", "будут есть"),
+                impSg = "ешь", impPl = "ешьте",
+                gerund = "едя", participle = "съеденный",
+                typeDesc = "Разноспрягаемый (древний) глагол"
+            ),
+            "пить" to SlavicVerbForms(
+                pres = listOf("пью", "пьёшь", "пьёт", "пьём", "пьёте", "пьют"),
+                pastM = "пил", pastF = "пила", pastN = "пило", pastPl = "пили",
+                fut = listOf("буду пить", "будешь пить", "будет пить", "будем пить", "будете пить", "будут пить"),
+                impSg = "пей", impPl = "пейте",
+                gerund = "пия", participle = "выпитый",
+                typeDesc = "1-е спряжение"
+            ),
+            "спать" to SlavicVerbForms(
+                pres = listOf("сплю", "спишь", "спит", "спим", "спите", "спят"),
+                pastM = "спал", pastF = "спала", pastN = "спало", pastPl = "спали",
+                fut = listOf("буду спать", "будешь спать", "будет спать", "будем спать", "будете спать", "будут спать"),
+                impSg = "спи", impPl = "спите",
+                gerund = "спя", participle = "выспанный",
+                typeDesc = "2-е спряжение (вставная л)"
+            ),
+            "иметь" to SlavicVerbForms(
+                pres = listOf("имею", "имеешь", "имеет", "имеем", "имеете", "имеют"),
+                pastM = "имел", pastF = "имела", pastN = "имело", pastPl = "имели",
+                fut = listOf("буду иметь", "будешь иметь", "будет иметь", "будем иметь", "будете иметь", "будут иметь"),
+                impSg = "имей", impPl = "имейте",
+                gerund = "имея", participle = "имеющийся",
+                typeDesc = "1-е спряжение (-еть)"
+            ),
+            "понимать" to SlavicVerbForms(
+                pres = listOf("понимаю", "понимаешь", "понимает", "понимаем", "понимаете", "понимают"),
+                pastM = "понимал", pastF = "понимала", pastN = "понимало", pastPl = "понимали",
+                fut = listOf("буду понимать", "будешь понимать", "будет понимать", "будем понимать", "будете понимать", "будут понимать"),
+                impSg = "понимай", impPl = "понимайте",
+                gerund = "понимая", participle = "понятый",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "работать" to SlavicVerbForms(
+                pres = listOf("работаю", "работаешь", "работает", "работаем", "работаете", "работают"),
+                pastM = "работал", pastF = "работала", pastN = "работало", pastPl = "работали",
+                fut = listOf("буду работать", "будешь работать", "будет работать", "будем работать", "будете работать", "будут работать"),
+                impSg = "работай", impPl = "работайте",
+                gerund = "работая", participle = "отработанный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "учить" to SlavicVerbForms(
+                pres = listOf("учу", "учишь", "учит", "учим", "учите", "учат"),
+                pastM = "учил", pastF = "учила", pastN = "учило", pastPl = "учили",
+                fut = listOf("буду учить", "будешь учить", "будет учить", "будем учить", "будете учить", "будут учить"),
+                impSg = "учи", impPl = "учите",
+                gerund = "уча", participle = "выученный",
+                typeDesc = "2-е спряжение (-ить)"
+            ),
+            "брать" to SlavicVerbForms(
+                pres = listOf("беру", "берёшь", "берёт", "берём", "берёте", "берут"),
+                pastM = "брал", pastF = "брала", pastN = "брало", pastPl = "брали",
+                fut = listOf("буду брать", "будешь брать", "будет брать", "будем брать", "будете брать", "будут брать"),
+                impSg = "бери", impPl = "берите",
+                gerund = "беря", participle = "взятый",
+                typeDesc = "1-е спряжение"
+            ),
+            "дать" to SlavicVerbForms(
+                pres = listOf("дам", "дашь", "даст", "дадим", "дадите", "дадут"),
+                pastM = "дал", pastF = "дала", pastN = "дало", pastPl = "дали",
+                fut = listOf("дам", "дашь", "даст", "дадим", "дадите", "дадут"),
+                impSg = "дай", impPl = "дайте",
+                gerund = "давая", participle = "данный",
+                typeDesc = "Разноспрягаемый глагол"
+            ),
+            "сказать" to SlavicVerbForms(
+                pres = listOf("скажу", "скажешь", "скажет", "скажем", "скажете", "скажут"),
+                pastM = "сказал", pastF = "сказала", pastN = "сказало", pastPl = "сказали",
+                fut = listOf("скажу", "скажешь", "скажет", "скажем", "скажете", "скажут"),
+                impSg = "скажи", impPl = "скажите",
+                gerund = "сказав", participle = "сказанный",
+                typeDesc = "1-е спряжение (з / ж)"
+            ),
+            "помогать" to SlavicVerbForms(
+                pres = listOf("помогаю", "помогаешь", "помогает", "помогаем", "помогаете", "помогают"),
+                pastM = "помогал", pastF = "помогала", pastN = "помогало", pastPl = "помогали",
+                fut = listOf("буду помогать", "будешь помогать", "будет помогать", "будем помогать", "будете помогать", "будут помогать"),
+                impSg = "помогай", impPl = "помогайте",
+                gerund = "помогая", participle = "оказанный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "ждать" to SlavicVerbForms(
+                pres = listOf("жду", "ждёшь", "ждёт", "ждём", "ждёте", "ждут"),
+                pastM = "ждал", pastF = "ждала", pastN = "ждало", pastPl = "ждали",
+                fut = listOf("буду ждать", "будешь ждать", "будет ждать", "будем ждать", "будете ждать", "будут ждать"),
+                impSg = "жди", impPl = "ждите",
+                gerund = "ждя", participle = "жданный",
+                typeDesc = "1-е спряжение"
+            ),
+            "искать" to SlavicVerbForms(
+                pres = listOf("ищу", "ищешь", "ищет", "ищем", "ищете", "ищут"),
+                pastM = "искал", pastF = "искала", pastN = "искало", pastPl = "искали",
+                fut = listOf("буду искать", "будешь искать", "будет искать", "будем искать", "будете искать", "будут искать"),
+                impSg = "ищи", impPl = "ищите",
+                gerund = "ища", participle = "найденный",
+                typeDesc = "1-е спряжение (ск / щ)"
+            ),
+            "покупать" to SlavicVerbForms(
+                pres = listOf("покупаю", "покупаешь", "покупает", "покупаем", "покупаете", "покупают"),
+                pastM = "покупал", pastF = "покупала", pastN = "покупало", pastPl = "покупали",
+                fut = listOf("буду покупать", "будешь покупать", "будет покупать", "будем покупать", "будете покупать", "будут покупать"),
+                impSg = "покупай", impPl = "покупайте",
+                gerund = "покупая", participle = "купленный",
+                typeDesc = "1-е спряжение (-ать)"
+            ),
+            "слушать" to SlavicVerbForms(
+                pres = listOf("слушаю", "слушаешь", "слушает", "слушаем", "слушаете", "слушают"),
+                pastM = "слушал", pastF = "слушала", pastN = "слушало", pastPl = "слушали",
+                fut = listOf("буду слушать", "будешь слушать", "будет слушать", "будем слушать", "будете слушать", "будут слушать"),
+                impSg = "слушай", impPl = "слушайте",
+                gerund = "слушая", participle = "послушанный",
+                typeDesc = "1-е спряжение (-ать)"
+            )
+        )
+
+        val verbData = knownRuVerbs[base] ?: run {
+            // Algorithmic fallback for regular Russian verbs
+            when {
+                base.endsWith("овать") || base.endsWith("евать") -> {
+                    val stem = base.removeSuffix("овать").removeSuffix("евать")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ую", "${stem}уешь", "${stem}ует", "${stem}уем", "${stem}уете", "${stem}уют"),
+                        pastM = "${stem}овал", pastF = "${stem}овала", pastN = "${stem}овало", pastPl = "${stem}овали",
+                        fut = listOf("буду $cleanVerb", "будешь $cleanVerb", "будет $cleanVerb", "будем $cleanVerb", "будете $cleanVerb", "будут $cleanVerb"),
+                        impSg = "${stem}уй", impPl = "${stem}уйте",
+                        gerund = "${stem}уя", participle = "${stem}ованный",
+                        typeDesc = "1-е спряжение (-овать)"
+                    )
+                }
+                base.endsWith("ать") || base.endsWith("ять") -> {
+                    val stem = base.removeSuffix("ть")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ю", "${stem}ешь", "${stem}ет", "${stem}ем", "${stem}ете", "${stem}ют"),
+                        pastM = "${stem}л", pastF = "${stem}ла", pastN = "${stem}ло", pastPl = "${stem}ли",
+                        fut = listOf("буду $cleanVerb", "будешь $cleanVerb", "будет $cleanVerb", "будем $cleanVerb", "будете $cleanVerb", "будут $cleanVerb"),
+                        impSg = "${stem}й", impPl = "${stem}йте",
+                        gerund = "${stem}я", participle = "${stem}нный",
+                        typeDesc = "1-е спряжение (-ать)"
+                    )
+                }
+                base.endsWith("ить") || base.endsWith("еть") -> {
+                    val stem = base.removeSuffix("ить").removeSuffix("еть")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}ю", "${stem}ишь", "${stem}ит", "${stem}им", "${stem}ите", "${stem}ят"),
+                        pastM = "${stem}ил", pastF = "${stem}ила", pastN = "${stem}ило", pastPl = "${stem}или",
+                        fut = listOf("буду $cleanVerb", "будешь $cleanVerb", "будет $cleanVerb", "будем $cleanVerb", "будете $cleanVerb", "будут $cleanVerb"),
+                        impSg = "${stem}и", impPl = "${stem}ите",
+                        gerund = "${stem}я", participle = "${stem}енный",
+                        typeDesc = "2-е спряжение (-ить/-еть)"
+                    )
+                }
+                else -> {
+                    val stem = base.removeSuffix("ть")
+                    SlavicVerbForms(
+                        pres = listOf("${stem}у", "${stem}ешь", "${stem}ет", "${stem}ем", "${stem}ете", "${stem}ут"),
+                        pastM = "${stem}л", pastF = "${stem}ла", pastN = "${stem}ло", pastPl = "${stem}ли",
+                        fut = listOf("буду $cleanVerb", "будешь $cleanVerb", "будет $cleanVerb", "будем $cleanVerb", "будете $cleanVerb", "будут $cleanVerb"),
+                        impSg = "${stem}и", impPl = "${stem}ите",
+                        gerund = "${stem}я", participle = "${stem}енный",
+                        typeDesc = "Спряжение глагола"
+                    )
+                }
+            }
+        }
+
+        val pronouns = listOf("я", "ты", "он / она / оно", "мы", "вы", "они")
+
+        val presentTense = TenseConjugation(
+            tenseName = "Настоящее время (Present Tense)",
+            tenseCategory = "Indicative",
+            description = "Описывает действия, происходящие в момент речи, привычные действия или факты.",
+            forms = pronouns.mapIndexed { idx, p ->
+                val form = verbData.pres[idx]
+                ConjugatedForm(
+                    pronoun = p,
+                    form = form,
+                    phonetic = russianPhonetic(form),
+                    translation = "$p $meaning",
+                    exampleSentence = "$p $form каждый день."
+                )
+            }
+        )
+
+        val pastTense = TenseConjugation(
+            tenseName = "Прошедшее время (Past Tense)",
+            tenseCategory = "Indicative",
+            description = "Описывает действия, совершённые в прошлом. Изменяется по родам (м., ж., ср.) и числам.",
+            forms = listOf(
+                ConjugatedForm("я (м. / ж.)", "${verbData.pastM} / ${verbData.pastF}", russianPhonetic(verbData.pastM), "I $meaning (past)", "Я уже это делал / делала."),
+                ConjugatedForm("ты (м. / ж.)", "${verbData.pastM} / ${verbData.pastF}", russianPhonetic(verbData.pastM), "you $meaning (past)", "Ты вчера ${verbData.pastM}."),
+                ConjugatedForm("он (Masculine)", verbData.pastM, russianPhonetic(verbData.pastM), "he $meaning", "Он вчера ${verbData.pastM}."),
+                ConjugatedForm("она (Feminine)", verbData.pastF, russianPhonetic(verbData.pastF), "she $meaning", "Она вчера ${verbData.pastF}."),
+                ConjugatedForm("оно (Neuter)", verbData.pastN, russianPhonetic(verbData.pastN), "it $meaning", "Оно уже ${verbData.pastN}."),
+                ConjugatedForm("мы / вы / они (Plural)", verbData.pastPl, russianPhonetic(verbData.pastPl), "we / you / they $meaning", "Мы вчера вместе ${verbData.pastPl}.")
+            )
+        )
+
+        val futureTense = TenseConjugation(
+            tenseName = "Будущее время (Future Tense)",
+            tenseCategory = "Indicative",
+            description = "Действия, которые произойдут в будущем (быть + инфинитив несовершенного вида).",
+            forms = pronouns.mapIndexed { idx, p ->
+                val form = verbData.fut[idx]
+                ConjugatedForm(
+                    pronoun = p,
+                    form = form,
+                    phonetic = russianPhonetic(form),
+                    translation = "will $meaning",
+                    exampleSentence = "$p обязательно $form."
+                )
+            }
+        )
+
+        val imperativeTense = TenseConjugation(
+            tenseName = "Повелительное наклонение (Imperative)",
+            tenseCategory = "Imperative",
+            description = "Побуждение к действию, вежливая просьба или приказ.",
+            forms = listOf(
+                ConjugatedForm("ты (Неформально)", "${verbData.impSg}!", russianPhonetic(verbData.impSg), "do $meaning!", "${verbData.impSg}, пожалуйста!"),
+                ConjugatedForm("мы (Совместное действие)", "давайте $cleanVerb!", russianPhonetic("давайте"), "let's $meaning!", "Давайте вместе $cleanVerb!"),
+                ConjugatedForm("вы (Вежливо / Мн.ч.)", "${verbData.impPl}!", russianPhonetic(verbData.impPl), "please $meaning!", "${verbData.impPl}, пожалуйста!")
+            )
+        )
+
+        return VerbTableData(
+            infinitive = verb,
+            languageCode = "ru",
+            englishMeaning = meaning,
+            regularType = verbData.typeDesc,
+            auxiliaryVerb = "быть (буду, будешь...)",
+            gerund = verbData.gerund,
+            gerundPhonetic = russianPhonetic(verbData.gerund),
+            pastParticiple = verbData.participle,
+            pastParticiplePhonetic = russianPhonetic(verbData.participle),
+            tenses = listOf(presentTense, pastTense, futureTense, imperativeTense)
+        )
+    }
+
+    private fun ukrainianPhonetic(text: String): String {
+        return text.map { ch ->
+            when (ch) {
+                'а' -> "a"
+                'б' -> "b"
+                'в' -> "v"
+                'г' -> "h"
+                'ґ' -> "g"
+                'д' -> "d"
+                'е' -> "e"
+                'є' -> "ye"
+                'ж' -> "zh"
+                'з' -> "z"
+                'и' -> "y"
+                'і' -> "i"
+                'ї' -> "yi"
+                'й' -> "y"
+                'к' -> "k"
+                'л' -> "l"
+                'м' -> "m"
+                'н' -> "n"
+                'о' -> "o"
+                'п' -> "p"
+                'р' -> "r"
+                'с' -> "s"
+                'т' -> "t"
+                'у' -> "u"
+                'ф' -> "f"
+                'х' -> "kh"
+                'ц' -> "ts"
+                'ч' -> "ch"
+                'ш' -> "sh"
+                'щ' -> "shch"
+                'ь' -> "'"
+                'ю' -> "yu"
+                'я' -> "ya"
+                else -> ch.toString()
+            }
+        }.joinToString("")
+    }
+
+    private fun russianPhonetic(text: String): String {
+        return text.map { ch ->
+            when (ch) {
+                'а' -> "a"
+                'б' -> "b"
+                'в' -> "v"
+                'г' -> "g"
+                'д' -> "d"
+                'е' -> "ye"
+                'ё' -> "yo"
+                'ж' -> "zh"
+                'з' -> "z"
+                'и' -> "i"
+                'й' -> "y"
+                'к' -> "k"
+                'л' -> "l"
+                'м' -> "m"
+                'н' -> "n"
+                'о' -> "o"
+                'п' -> "p"
+                'р' -> "r"
+                'с' -> "s"
+                'т' -> "t"
+                'у' -> "u"
+                'ф' -> "f"
+                'х' -> "kh"
+                'ц' -> "ts"
+                'ч' -> "ch"
+                'ш' -> "sh"
+                'щ' -> "shch"
+                'ъ' -> ""
+                'ы' -> "y"
+                'ь' -> "'"
+                'э' -> "e"
+                'ю' -> "yu"
+                'я' -> "ya"
+                else -> ch.toString()
+            }
+        }.joinToString("")
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +49,7 @@ import com.example.ui.theme.PrimaryIndigo
 import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +60,12 @@ fun WordDeepDiveSheet(
     onDismiss: () -> Unit,
     onSpeak: (String) -> Unit,
     onToggleBookmark: (VocabularyWordEntity) -> Unit,
-    onOpenVerbTable: ((VocabularyWordEntity) -> Unit)? = null
+    onOpenVerbTable: ((VocabularyWordEntity) -> Unit)? = null,
+    nativeLangCode: String = "de"
 ) {
     if (word == null) return
+
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -91,7 +96,7 @@ fun WordDeepDiveSheet(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "AI Word Deep-Dive",
+                        text = strings.aiDeepDive,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -110,7 +115,7 @@ fun WordDeepDiveSheet(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = strings.closeButton,
                             tint = TextSecondary
                         )
                     }
@@ -218,20 +223,20 @@ fun WordDeepDiveSheet(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Full Verb Conjugation Table",
+                                    text = strings.conjugationTableTitle,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryIndigo
                                 )
                                 Text(
-                                    text = "All tenses, persons, participles & audio",
+                                    text = strings.fullVerbTableSubtitle,
                                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                     color = TextSecondary
                                 )
                             }
                         }
                         Text(
-                            text = "View →",
+                            text = "${strings.tabVerbs} →",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryIndigo
@@ -257,7 +262,7 @@ fun WordDeepDiveSheet(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(
-                        text = "Analyzing mnemonics, nuance & native contexts with Gemini...",
+                        text = strings.aiAnalyzingDeepDive,
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
@@ -289,7 +294,7 @@ fun WordDeepDiveSheet(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
             ) {
-                Text(text = "Got It", fontWeight = FontWeight.Bold)
+                Text(text = strings.closeButton, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

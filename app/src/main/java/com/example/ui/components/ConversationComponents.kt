@@ -72,6 +72,7 @@ import com.example.ui.theme.SuccessGreenDark
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.UserBubbleBg
+import com.example.ui.util.AppLocalization
 
 @Composable
 fun MessageItem(
@@ -81,8 +82,10 @@ fun MessageItem(
     showPronunciationGlobal: Boolean,
     isSaved: Boolean,
     onSpeakClick: () -> Unit,
+    onSpeakAlternative: (String) -> Unit = {},
     onSaveWordClick: (word: String, translation: String, context: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
     var isTranslationExpanded by remember { mutableStateOf(showTranslationGlobal) }
 
@@ -97,8 +100,10 @@ fun MessageItem(
             isSaved = isSaved,
             onToggleTranslation = { isTranslationExpanded = !isTranslationExpanded },
             onSpeakClick = onSpeakClick,
+            onSpeakAlternative = onSpeakAlternative,
             onSaveWordClick = onSaveWordClick,
-            modifier = modifier
+            modifier = modifier,
+            nativeLangCode = nativeLangCode
         )
     }
 }
@@ -144,9 +149,13 @@ fun AiMessageBubble(
     isSaved: Boolean,
     onToggleTranslation: () -> Unit,
     onSpeakClick: () -> Unit,
+    onSpeakAlternative: (String) -> Unit = {},
     onSaveWordClick: (word: String, translation: String, context: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -201,7 +210,7 @@ fun AiMessageBubble(
                         fontWeight = FontWeight.SemiBold
                     )
 
-                    // English Translation
+                    // Native Translation
                     AnimatedVisibility(visible = isTranslationVisible && !message.translation.isNullOrBlank()) {
                         Column {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -233,7 +242,8 @@ fun AiMessageBubble(
                         // Speaker Play button
                         AudioPlayPill(
                             isSpeaking = isSpeaking,
-                            onClick = onSpeakClick
+                            onClick = onSpeakClick,
+                            nativeLangCode = nativeLangCode
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -280,7 +290,9 @@ fun AiMessageBubble(
                 Spacer(modifier = Modifier.height(8.dp))
                 GrammarCoachCard(
                     feedback = message.grammarFeedback,
-                    betterAlternative = message.betterAlternative
+                    betterAlternative = message.betterAlternative,
+                    onSpeakAlternative = onSpeakAlternative,
+                    nativeLangCode = nativeLangCode
                 )
             }
         }
@@ -291,8 +303,10 @@ fun AiMessageBubble(
 fun AudioPlayPill(
     isSpeaking: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
     val infiniteTransition = rememberInfiniteTransition(label = "audio_pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.95f,
@@ -326,7 +340,7 @@ fun AudioPlayPill(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = if (isSpeaking) "Speaking..." else "Listen",
+                text = if (isSpeaking) strings.speakingAudioLabel else strings.listenAudioLabel,
                 color = if (isSpeaking) Color.White else PrimaryIndigo,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
@@ -339,8 +353,12 @@ fun AudioPlayPill(
 fun GrammarCoachCard(
     feedback: String,
     betterAlternative: String?,
-    modifier: Modifier = Modifier
+    onSpeakAlternative: (String) -> Unit = {},
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = FeedbackCardBg,
@@ -359,7 +377,7 @@ fun GrammarCoachCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Coach Feedback",
+                    text = strings.coachFeedbackTitle,
                     color = SuccessGreenDark,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -383,19 +401,36 @@ fun GrammarCoachCard(
                         .background(Color.White)
                         .padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = "✨ Native way to say it:",
-                            color = AccentCoral,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = betterAlternative,
-                            color = TextPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = strings.nativeWayToSayTitle,
+                                color = AccentCoral,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = betterAlternative,
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        IconButton(
+                            onClick = { onSpeakAlternative(betterAlternative) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = "Hear suggestion",
+                                tint = PrimaryIndigo,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -407,9 +442,11 @@ fun GrammarCoachCard(
 fun SuggestionChipsRow(
     suggestions: List<String>,
     onSelectSuggestion: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
     if (suggestions.isEmpty()) return
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -417,7 +454,7 @@ fun SuggestionChipsRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "💬 Suggested responses:",
+                text = strings.suggestedResponsesTitle,
                 color = TextSecondary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
@@ -456,7 +493,11 @@ fun SuggestionChipsRow(
 }
 
 @Composable
-fun TypingIndicatorBubble(modifier: Modifier = Modifier) {
+fun TypingIndicatorBubble(
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
+) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
     val infiniteTransition = rememberInfiniteTransition(label = "typing")
     val dot1 by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -503,7 +544,7 @@ fun TypingIndicatorBubble(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Maya is thinking",
+                    text = strings.partnerThinkingText,
                     color = TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
@@ -539,8 +580,11 @@ fun ScenarioGoalCard(
     scenario: PracticeScenario,
     turnsCount: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = Color.White,
@@ -586,7 +630,7 @@ fun ScenarioGoalCard(
                         }
                     }
                     Text(
-                        text = "Goal: ${scenario.goals.firstOrNull() ?: scenario.description}",
+                        text = "${strings.goalLabel} ${scenario.goals.firstOrNull() ?: scenario.description}",
                         color = TextSecondary,
                         fontSize = 12.sp,
                         maxLines = 1
@@ -613,7 +657,7 @@ fun ScenarioGoalCard(
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Text(
-                        text = "$turnsCount turns",
+                        text = "$turnsCount ${strings.turnsLabel}",
                         color = if (turnsCount >= 3) SuccessGreenDark else TextSecondary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold

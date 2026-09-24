@@ -348,3 +348,199 @@ val EnglishCuratedWords = listOf(
         exampleSentence = "Our encounter was pure serendipity.", exampleTranslation = "Our encounter was pure serendipity."
     )
 )
+
+val RussianCuratedWords = listOf(
+    // Tier 1: A1 Essentials
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 1, word = "быть", translation = "to be / exist",
+        phonetic = "byt'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Всё будет хорошо.", exampleTranslation = "Everything will be fine."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 2, word = "делать", translation = "to do / make",
+        phonetic = "DYE-lat'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Что ты делаешь сейчас?", exampleTranslation = "What are you doing now?"
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 3, word = "говорить", translation = "to speak / talk",
+        phonetic = "ga-va-REET'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Мы говорим по-русски.", exampleTranslation = "We speak Russian."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 4, word = "знать", translation = "to know",
+        phonetic = "znat'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Я знаю этот ответ.", exampleTranslation = "I know this answer."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 5, word = "идти", translation = "to go / walk",
+        phonetic = "eet-TEE", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Пора идти домой.", exampleTranslation = "It is time to go home."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 6, word = "видеть", translation = "to see",
+        phonetic = "VEE-det'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Рад тебя видеть!", exampleTranslation = "Glad to see you!"
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 7, word = "думать", translation = "to think",
+        phonetic = "DOO-mat'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "О чём ты думаешь?", exampleTranslation = "What are you thinking about?"
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 8, word = "хотеть", translation = "to want",
+        phonetic = "kha-TYET'", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Я хочу выучить язык.", exampleTranslation = "I want to learn the language."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 10, word = "время", translation = "time",
+        phonetic = "VRYE-mya", partOfSpeech = "noun", category = "Daily Life", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Время летит быстро.", exampleTranslation = "Time flies fast."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 15, word = "друг", translation = "friend",
+        phonetic = "drook", partOfSpeech = "noun", category = "Relationships", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Настоящий друг всегда поможет.", exampleTranslation = "A real friend always helps."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 25, word = "дом", translation = "house / home",
+        phonetic = "dom", partOfSpeech = "noun", category = "Daily Life", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Добро пожаловать в наш дом.", exampleTranslation = "Welcome to our home."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 85, word = "понимать", translation = "to understand",
+        phonetic = "pa-nee-MAT'", partOfSpeech = "verb", category = "Communication", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Теперь я всё понимаю.", exampleTranslation = "Now I understand everything."
+    ),
+    // Tier 2: A2 Everyday Fluency
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 1020, word = "привычка", translation = "habit / routine",
+        phonetic = "pree-VYCH-ka", partOfSpeech = "noun", category = "Lifestyle", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Хорошая привычка читать каждый день.", exampleTranslation = "It's a good habit to read every day."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 1150, word = "развивать", translation = "to develop / evolve",
+        phonetic = "raz-vee-VAT'", partOfSpeech = "verb", category = "Growth", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Мы развиваем полезные навыки.", exampleTranslation = "We are developing useful skills."
+    ),
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 1850, word = "мудрость", translation = "wisdom",
+        phonetic = "MOOD-rast'", partOfSpeech = "noun", category = "Mind & Spirit", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Мудрость приходит с опытом.", exampleTranslation = "Wisdom comes with experience."
+    ),
+    // Tier 3: B1
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 2650, word = "необходимый", translation = "essential / indispensable",
+        phonetic = "ne-ab-kha-DEE-my", partOfSpeech = "adjective", category = "Importance", tier = 3, cefrLevel = "B1",
+        exampleSentence = "Практика — это необходимый шаг.", exampleTranslation = "Practice is an essential step."
+    ),
+    // Tier 4: B2
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 5200, word = "взаимопонимание", translation = "mutual understanding",
+        phonetic = "vza-ee-ma-pa-nee-MA-nee-ye", partOfSpeech = "noun", category = "Relationships", tier = 4, cefrLevel = "B2",
+        exampleSentence = "Взаимопонимание объединяет людей.", exampleTranslation = "Mutual understanding unites people."
+    ),
+    // Tier 5: C1-C2
+    VocabularyWordEntity(
+        languageCode = "ru", frequencyRank = 8200, word = "умиротворение", translation = "serenity / peacefulness",
+        phonetic = "oo-mee-rat-va-RYE-nee-ye", partOfSpeech = "noun", category = "State of Mind", tier = 5, cefrLevel = "C1-C2",
+        exampleSentence = "На природе ощущается глубокое умиротворение.", exampleTranslation = "In nature, deep serenity is felt."
+    )
+)
+
+val UkrainianCuratedWords = listOf(
+    // Tier 1: A1 Essentials
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 1, word = "бути", translation = "to be / exist",
+        phonetic = "BOO-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Все буде чудово.", exampleTranslation = "Everything will be wonderful."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 2, word = "робити", translation = "to do / make",
+        phonetic = "ro-BY-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Що ти зараз робиш?", exampleTranslation = "What are you doing now?"
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 3, word = "говорити", translation = "to speak / talk",
+        phonetic = "ho-vo-RY-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Ми говоримо українською.", exampleTranslation = "We speak Ukrainian."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 4, word = "знати", translation = "to know",
+        phonetic = "ZNA-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Я знаю цю відповідь.", exampleTranslation = "I know this answer."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 5, word = "йти", translation = "to go / walk",
+        phonetic = "yty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Час іти додому.", exampleTranslation = "It's time to go home."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 6, word = "бачити", translation = "to see",
+        phonetic = "BA-chy-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Радий тебе бачити!", exampleTranslation = "Glad to see you!"
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 7, word = "думати", translation = "to think",
+        phonetic = "DOO-ma-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Про що ти думаєш?", exampleTranslation = "What are you thinking about?"
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 8, word = "хотіти", translation = "to want",
+        phonetic = "kho-TEE-ty", partOfSpeech = "verb", category = "Core Verbs", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Я хочу вивчити мову.", exampleTranslation = "I want to learn the language."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 10, word = "час", translation = "time",
+        phonetic = "chas", partOfSpeech = "noun", category = "Daily Life", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Час летить дуже швидко.", exampleTranslation = "Time flies very fast."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 15, word = "друг", translation = "friend",
+        phonetic = "drooh", partOfSpeech = "noun", category = "Relationships", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Справжній друг завжди поруч.", exampleTranslation = "A true friend is always near."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 25, word = "дім", translation = "house / home",
+        phonetic = "deem", partOfSpeech = "noun", category = "Daily Life", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Ласкаво просимо до нашого дому.", exampleTranslation = "Welcome to our home."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 85, word = "розуміти", translation = "to understand",
+        phonetic = "ro-zoo-MEE-ty", partOfSpeech = "verb", category = "Communication", tier = 1, cefrLevel = "A1",
+        exampleSentence = "Тепер я все розумію.", exampleTranslation = "Now I understand everything."
+    ),
+    // Tier 2: A2 Everyday Fluency
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 1020, word = "звичка", translation = "habit / routine",
+        phonetic = "ZVYCH-ka", partOfSpeech = "noun", category = "Lifestyle", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Корисна звичка читати щодня.", exampleTranslation = "It is a useful habit to read every day."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 1150, word = "розвивати", translation = "to develop / evolve",
+        phonetic = "roz-vy-VA-ty", partOfSpeech = "verb", category = "Growth", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Ми розвиваємо нові навички.", exampleTranslation = "We are developing new skills."
+    ),
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 1850, word = "мудрість", translation = "wisdom",
+        phonetic = "MOO-drist'", partOfSpeech = "noun", category = "Mind & Spirit", tier = 2, cefrLevel = "A2",
+        exampleSentence = "Мудрість приходить з досвідом.", exampleTranslation = "Wisdom comes with experience."
+    ),
+    // Tier 3: B1
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 2650, word = "необхідний", translation = "essential / indispensable",
+        phonetic = "ne-ob-KHEED-ny", partOfSpeech = "adjective", category = "Importance", tier = 3, cefrLevel = "B1",
+        exampleSentence = "Практика — це необхідний крок.", exampleTranslation = "Practice is an essential step."
+    ),
+    // Tier 4: B2
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 5200, word = "взаєморозуміння", translation = "mutual understanding",
+        phonetic = "vza-ye-mo-ro-zoo-MEE-nnya", partOfSpeech = "noun", category = "Relationships", tier = 4, cefrLevel = "B2",
+        exampleSentence = "Взаєморозуміння будує міцні мости.", exampleTranslation = "Mutual understanding builds strong bridges."
+    ),
+    // Tier 5: C1-C2
+    VocabularyWordEntity(
+        languageCode = "uk", frequencyRank = 8200, word = "натхнення", translation = "inspiration / illumination",
+        phonetic = "nat-KHNEN-nya", partOfSpeech = "noun", category = "Creativity", tier = 5, cefrLevel = "C1-C2",
+        exampleSentence = "Щоденна праця приносить справжнє натхнення.", exampleTranslation = "Daily work brings true inspiration."
+    )
+)

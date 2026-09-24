@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,7 @@ import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SuccessGreenLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 import com.example.ui.viewmodel.QuizQuestion
 
 @Composable
@@ -67,11 +69,14 @@ fun QuizView(
     onNextQuestion: () -> Unit,
     onRestartQuiz: () -> Unit,
     onSpeak: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     if (questions.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Loading quiz questions...", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+            Text(strings.loadingQuizText, style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
         }
         return
     }
@@ -81,7 +86,8 @@ fun QuizView(
             score = score,
             totalQuestions = questions.size,
             onRestart = onRestartQuiz,
-            modifier = modifier
+            modifier = modifier,
+            strings = strings
         )
         return
     }
@@ -103,7 +109,7 @@ fun QuizView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Question ${currentIndex + 1} of ${questions.size}",
+                    text = "${strings.quizTitle} ${currentIndex + 1} ${strings.stageOf} ${questions.size}",
                     style = MaterialTheme.typography.labelLarge,
                     color = TextSecondary,
                     fontWeight = FontWeight.SemiBold
@@ -127,7 +133,7 @@ fun QuizView(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "$streak Streak",
+                                    text = "$streak ${strings.streakLabel}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFF92400E),
                                     fontWeight = FontWeight.Bold
@@ -142,7 +148,7 @@ fun QuizView(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "$score pts",
+                            text = "$score ${strings.quizScore}",
                             style = MaterialTheme.typography.labelSmall,
                             color = PrimaryIndigo,
                             fontWeight = FontWeight.Bold,
@@ -181,7 +187,7 @@ fun QuizView(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Translate this word:",
+                    text = strings.quizQuestionPrompt,
                     style = MaterialTheme.typography.labelMedium,
                     color = TextSecondary
                 )
@@ -315,7 +321,7 @@ fun QuizView(
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
         ) {
             Text(
-                text = if (currentIndex + 1 < questions.size) "Continue" else "Finish Quiz",
+                text = if (currentIndex + 1 < questions.size) strings.nextQuestion else strings.quizCompleted,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -328,7 +334,8 @@ private fun QuizCompletionCard(
     score: Int,
     totalQuestions: Int,
     onRestart: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    strings: com.example.ui.util.AppUiStrings
 ) {
     val percentage = (score / (totalQuestions * 10).toFloat() * 100).toInt().coerceIn(0, 100)
 
@@ -369,7 +376,7 @@ private fun QuizCompletionCard(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Quiz Complete!",
+                    text = strings.quizCompleted,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -378,7 +385,7 @@ private fun QuizCompletionCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "You scored $score points ($percentage% accuracy)",
+                    text = "${strings.quizScore}: $score ($percentage%)",
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextSecondary,
                     textAlign = TextAlign.Center
@@ -392,7 +399,7 @@ private fun QuizCompletionCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Your progress has been recorded to your 10,000 word mastery record!",
+                        text = strings.statsMastered,
                         style = MaterialTheme.typography.bodySmall,
                         color = SuccessGreen,
                         fontWeight = FontWeight.Medium,
@@ -413,7 +420,7 @@ private fun QuizCompletionCard(
                 ) {
                     Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Practice Again", fontWeight = FontWeight.Bold)
+                    Text(text = strings.restartQuiz, fontWeight = FontWeight.Bold)
                 }
             }
         }

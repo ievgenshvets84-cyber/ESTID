@@ -18,8 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
@@ -56,6 +58,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.models.SupportedLanguages
 import com.example.data.vocabulary.VocabularyTiers
 import com.example.ui.components.vocabulary.FlashcardView
+import com.example.ui.components.vocabulary.PhraseDeepDiveSheet
+import com.example.ui.components.vocabulary.PhraseLearningView
 import com.example.ui.components.vocabulary.PronunciationDrillView
 import com.example.ui.components.vocabulary.QuizView
 import com.example.ui.components.vocabulary.VerbExplorerView
@@ -68,6 +72,7 @@ import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 import com.example.ui.viewmodel.VocabularyMode
 import com.example.ui.viewmodel.VocabularyViewModel
 
@@ -76,10 +81,14 @@ import com.example.ui.viewmodel.VocabularyViewModel
 fun WordLearningScreen(
     viewModel: VocabularyViewModel,
     modifier: Modifier = Modifier,
-    onLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null
+    onLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null,
+    onNativeLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLanguageDropdown by remember { mutableStateOf(false) }
+    var showNativeLanguageDropdown by remember { mutableStateOf(false) }
+
+    val strings = remember(uiState.nativeLanguage.code) { AppLocalization.getStrings(uiState.nativeLanguage.code) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -91,39 +100,39 @@ fun WordLearningScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "10,000 Words",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = strings.navVocabulary,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
-                        // Language selector chip
+                        // Target Language selector chip
                         Box {
                             Surface(
                                 color = PrimaryIndigoLight,
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
                                     .clickable { showLanguageDropdown = true }
                                     .testTag("vocabulary_language_picker")
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "${uiState.selectedLanguage.flag} ${uiState.selectedLanguage.name}",
+                                        text = "${uiState.selectedLanguage.flag} ${uiState.selectedLanguage.code.uppercase()}",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = PrimaryIndigo
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(2.dp))
                                     Icon(
                                         imageVector = Icons.Default.ExpandMore,
-                                        contentDescription = "Select Language",
+                                        contentDescription = "Select Learning Language",
                                         tint = PrimaryIndigo,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -144,6 +153,75 @@ fun WordLearningScreen(
                                         onClick = {
                                             onLanguageSelected?.invoke(language) ?: viewModel.setLanguage(language)
                                             showLanguageDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "translates to",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(13.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        // Native Mother Tongue selector chip
+                        Box {
+                            Surface(
+                                color = Color(0xFFEFF6FF),
+                                shape = RoundedCornerShape(14.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                                modifier = Modifier
+                                    .clickable { showNativeLanguageDropdown = true }
+                                    .testTag("vocabulary_native_language_picker")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${uiState.nativeLanguage.flag} ${uiState.nativeLanguage.code.uppercase()}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1D4ED8)
+                                    )
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ExpandMore,
+                                        contentDescription = "Select Native Language",
+                                        tint = Color(0xFF1D4ED8),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = showNativeLanguageDropdown,
+                                onDismissRequest = { showNativeLanguageDropdown = false }
+                            ) {
+                                Text(
+                                    text = "${strings.nativeLangTitle}:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondary,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                )
+                                SupportedLanguages.forEach { language ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(language.flag, fontSize = 20.sp)
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(language.name, fontWeight = if (language.code == uiState.nativeLanguage.code) FontWeight.Bold else FontWeight.Medium)
+                                            }
+                                        },
+                                        onClick = {
+                                            onNativeLanguageSelected?.invoke(language) ?: viewModel.setNativeLanguage(language)
+                                            showNativeLanguageDropdown = false
                                         }
                                     )
                                 }
@@ -175,7 +253,7 @@ fun WordLearningScreen(
                     ) {
                         Column {
                             Text(
-                                text = "10,000 Words Curriculum",
+                                text = strings.vocabTitle,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondary,
                                 fontWeight = FontWeight.SemiBold
@@ -188,7 +266,7 @@ fun WordLearningScreen(
                                     color = PrimaryIndigo
                                 )
                                 Text(
-                                    text = " / 10,000 words mastered",
+                                    text = " / 10,000 ${strings.statsMastered}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondary,
                                     modifier = Modifier.padding(bottom = 2.dp, start = 4.dp)
@@ -212,7 +290,7 @@ fun WordLearningScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Stage ${uiState.currentStage} / 100",
+                                    text = "${strings.stageLabel} ${uiState.currentStage} / 100",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF92400E)
@@ -277,35 +355,42 @@ fun WordLearningScreen(
                 Tab(
                     selected = uiState.currentMode == VocabularyMode.FLASHCARDS,
                     onClick = { viewModel.setMode(VocabularyMode.FLASHCARDS) },
-                    text = { Text("Cards", fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                    text = { Text(strings.tabCards, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.ViewCarousel, contentDescription = "Flashcards", modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_flashcards")
                 )
                 Tab(
                     selected = uiState.currentMode == VocabularyMode.EXPLORER,
                     onClick = { viewModel.setMode(VocabularyMode.EXPLORER) },
-                    text = { Text("Explorer", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                    text = { Text(strings.tabExplorer, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.School, contentDescription = "Explorer", modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_explorer")
                 )
                 Tab(
                     selected = uiState.currentMode == VocabularyMode.VERBS,
                     onClick = { viewModel.setMode(VocabularyMode.VERBS) },
-                    text = { Text("Verbs", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                    text = { Text(strings.tabVerbs, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.TableChart, contentDescription = "Verbs", modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_verbs")
                 )
                 Tab(
+                    selected = uiState.currentMode == VocabularyMode.PHRASES,
+                    onClick = { viewModel.setMode(VocabularyMode.PHRASES) },
+                    text = { Text(strings.tabPhrases, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.Default.FormatQuote, contentDescription = "Phrases", modifier = Modifier.size(18.dp)) },
+                    modifier = Modifier.testTag("tab_phrases")
+                )
+                Tab(
                     selected = uiState.currentMode == VocabularyMode.QUIZ,
                     onClick = { viewModel.setMode(VocabularyMode.QUIZ) },
-                    text = { Text("Quiz", fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                    text = { Text(strings.tabQuiz, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Quiz, contentDescription = "Quiz", modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_quiz")
                 )
                 Tab(
                     selected = uiState.currentMode == VocabularyMode.PRONUNCIATION,
                     onClick = { viewModel.setMode(VocabularyMode.PRONUNCIATION) },
-                    text = { Text("Speech", fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                    text = { Text(strings.tabDrill, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.GraphicEq, contentDescription = "Pronunciation", modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_pronunciation")
                 )
@@ -336,7 +421,8 @@ fun WordLearningScreen(
                                 onMarkMastery = { masteryLevel -> viewModel.markCurrentCardMastery(masteryLevel) },
                                 onToggleBookmark = { word -> viewModel.toggleBookmark(word) },
                                 onSpeak = { text -> viewModel.speakWord(text) },
-                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) }
+                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) },
+                                nativeLangCode = uiState.nativeLanguage.code
                             )
                         }
 
@@ -357,7 +443,8 @@ fun WordLearningScreen(
                                     val newM = if (word.masteryLevel >= 3) 0 else 3
                                     viewModel.markCurrentCardMastery(newM)
                                 },
-                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) }
+                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) },
+                                nativeLangCode = uiState.nativeLanguage.code
                             )
                         }
 
@@ -369,7 +456,39 @@ fun WordLearningScreen(
                                 onOpenVerbTable = { verb -> viewModel.openVerbTable(verb) },
                                 onSpeak = { text -> viewModel.speakWord(text) },
                                 onToggleBookmark = { word -> viewModel.toggleBookmark(word) },
-                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) }
+                                onAiDeepDive = { word -> viewModel.openWordDeepDive(word) },
+                                nativeLangCode = uiState.nativeLanguage.code
+                            )
+                        }
+
+                        VocabularyMode.PHRASES -> {
+                            PhraseLearningView(
+                                phrases = uiState.filteredPhrasesList,
+                                allPhrases = uiState.phrasesList,
+                                selectedCategory = uiState.selectedPhraseCategory,
+                                searchQuery = uiState.phraseSearchQuery,
+                                subMode = uiState.phraseSubMode,
+                                currentTrainerIndex = uiState.currentPhraseTrainerIndex,
+                                isTrainerFlipped = uiState.isPhraseTrainerFlipped,
+                                quizQuestions = uiState.phraseQuizQuestions,
+                                currentQuizIndex = uiState.currentPhraseQuizIndex,
+                                selectedQuizAnswer = uiState.selectedPhraseQuizAnswer,
+                                isQuizSubmitted = uiState.isPhraseQuizSubmitted,
+                                quizScore = uiState.phraseQuizScore,
+                                isQuizFinished = uiState.isPhraseQuizFinished,
+                                onSelectCategory = { viewModel.setPhraseCategory(it) },
+                                onSearchChanged = { viewModel.onPhraseSearchChanged(it) },
+                                onSelectSubMode = { viewModel.setPhraseSubMode(it) },
+                                onToggleBookmark = { viewModel.togglePhraseBookmark(it) },
+                                onSpeak = { viewModel.speakWord(it) },
+                                onAiDeepDive = { viewModel.openPhraseDeepDive(it) },
+                                onNextTrainerCard = { viewModel.nextPhraseTrainerCard() },
+                                onPrevTrainerCard = { viewModel.prevPhraseTrainerCard() },
+                                onFlipTrainerCard = { viewModel.flipPhraseTrainerCard() },
+                                onAnswerQuiz = { viewModel.answerPhraseQuiz(it) },
+                                onNextQuizQuestion = { viewModel.nextPhraseQuizQuestion() },
+                                onRestartQuiz = { viewModel.restartPhraseQuiz() },
+                                nativeLangCode = uiState.nativeLanguage.code
                             )
                         }
 
@@ -386,7 +505,8 @@ fun WordLearningScreen(
                                 onSelectAnswer = { index -> viewModel.selectQuizAnswer(index) },
                                 onNextQuestion = { viewModel.nextQuizQuestion() },
                                 onRestartQuiz = { viewModel.startNewQuiz() },
-                                onSpeak = { text -> viewModel.speakWord(text) }
+                                onSpeak = { text -> viewModel.speakWord(text) },
+                                nativeLangCode = uiState.nativeLanguage.code
                             )
                         }
 
@@ -403,7 +523,8 @@ fun WordLearningScreen(
                                 },
                                 onStopListening = { viewModel.stopPronunciationListening() },
                                 onSpeak = { text -> viewModel.speakWord(text) },
-                                onNextWord = { viewModel.nextCard() }
+                                onNextWord = { viewModel.nextCard() },
+                                nativeLangCode = uiState.nativeLanguage.code
                             )
                         }
                     }
@@ -419,7 +540,8 @@ fun WordLearningScreen(
                 isLoading = uiState.isDeepDiveLoading,
                 onDismiss = { viewModel.closeWordDeepDive() },
                 onSpeak = { text -> viewModel.speakWord(text) },
-                onToggleBookmark = { word -> viewModel.toggleBookmark(word) }
+                onToggleBookmark = { word -> viewModel.toggleBookmark(word) },
+                nativeLangCode = uiState.nativeLanguage.code
             )
         }
 
@@ -428,7 +550,20 @@ fun WordLearningScreen(
             VerbTableSheet(
                 word = uiState.selectedVerbForTable,
                 onDismiss = { viewModel.closeVerbTable() },
-                onSpeak = { text -> viewModel.speakWord(text) }
+                onSpeak = { text -> viewModel.speakWord(text) },
+                nativeLangCode = uiState.nativeLanguage.code
+            )
+        }
+
+        // AI Phrase & Idiom Deep-Dive Sheet
+        if (uiState.selectedPhraseForDeepDive != null) {
+            PhraseDeepDiveSheet(
+                phrase = uiState.selectedPhraseForDeepDive!!,
+                deepDiveContent = uiState.phraseDeepDiveContent,
+                isLoading = uiState.isPhraseDeepDiveLoading,
+                onDismiss = { viewModel.closePhraseDeepDive() },
+                onSpeak = { text -> viewModel.speakWord(text) },
+                nativeLangCode = uiState.nativeLanguage.code
             )
         }
     }

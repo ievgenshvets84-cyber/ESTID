@@ -81,6 +81,8 @@ object VocabularyDataGenerator {
             "zh" -> ChineseCuratedWords
             "ko" -> KoreanCuratedWords
             "pt" -> PortugueseCuratedWords
+            "ru" -> RussianCuratedWords
+            "uk" -> UkrainianCuratedWords
             else -> EnglishCuratedWords
         }
     }
@@ -94,8 +96,7 @@ object VocabularyDataGenerator {
     }
 
     fun generateWord(languageCode: String, rank: Int): VocabularyWordEntity {
-        val curated = getCuratedSeeds(languageCode).find { it.frequencyRank == rank }
-        return curated ?: generateSyntheticWord(languageCode, rank)
+        return generateSyntheticWord(languageCode, rank)
     }
 
     fun generateWordsForRange(
@@ -103,17 +104,10 @@ object VocabularyDataGenerator {
         startRank: Int,
         count: Int
     ): List<VocabularyWordEntity> {
-        val curatedMap = getCuratedSeeds(languageCode).associateBy { it.frequencyRank }
         val result = mutableListOf<VocabularyWordEntity>()
-
         for (rank in startRank until (startRank + count)) {
             if (rank > 10000) break
-            val existing = curatedMap[rank]
-            if (existing != null) {
-                result.add(existing)
-            } else {
-                result.add(generateSyntheticWord(languageCode, rank))
-            }
+            result.add(generateSyntheticWord(languageCode, rank))
         }
         return result
     }
@@ -176,7 +170,6 @@ object VocabularyDataGenerator {
             Triple("superación", "overcoming / self-improvement", "soo-peh-rah-SYOHN")
         )
         val item = baseWords[rank % baseWords.size]
-        val suffix = if (rank > 16) " #${rank}" else ""
         return VocabularyWordEntity(
             languageCode = "es",
             frequencyRank = rank,

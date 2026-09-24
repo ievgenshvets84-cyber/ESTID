@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class VocabularyRepository(
-    private val vocabularyDao: VocabularyDao
+    private val vocabularyDao: VocabularyDao,
+    private val context: Context? = null
 ) {
     companion object {
         @Volatile
@@ -18,7 +19,7 @@ class VocabularyRepository(
         fun getInstance(context: Context): VocabularyRepository {
             return INSTANCE ?: synchronized(this) {
                 val db = AppDatabase.getDatabase(context)
-                val repo = VocabularyRepository(db.vocabularyDao())
+                val repo = VocabularyRepository(db.vocabularyDao(), context.applicationContext)
                 INSTANCE = repo
                 repo
             }
@@ -26,15 +27,17 @@ class VocabularyRepository(
     }
 
     suspend fun initializeLanguageIfNeeded(languageCode: String) = withContext(Dispatchers.IO) {
+        val prefs = context?.getSharedPreferences("vocab_prefs", Context.MODE_PRIVATE)
+        val currentVer = prefs?.getInt("vocab_seed_version_$languageCode", 0) ?: 0
+        val targetVer = 6
         val count = vocabularyDao.getWordCount(languageCode)
-        if (count < 500) {
-            // Seed curated words first
-            val curated = VocabularyDataGenerator.getCuratedSeeds(languageCode)
-            vocabularyDao.insertWords(curated)
 
-            // Seed initial 500 words to give rich immediate progression and verb variety
+        if (currentVer < targetVer || count < 500) {
+            vocabularyDao.clearLanguage(languageCode)
+            // Seed initial 500 words with pristine, distinct, CEFR-graded vocabulary
             val stageWords = VocabularyDataGenerator.generateWordsForRange(languageCode, 1, 500)
             vocabularyDao.insertWords(stageWords)
+            prefs?.edit()?.putInt("vocab_seed_version_$languageCode", targetVer)?.apply()
         }
     }
 

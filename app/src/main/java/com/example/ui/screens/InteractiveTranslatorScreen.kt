@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -82,6 +83,7 @@ import com.example.ui.theme.SecondaryAmberLight
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 import com.example.ui.viewmodel.TranslatorViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -89,10 +91,12 @@ import com.example.ui.viewmodel.TranslatorViewModel
 fun InteractiveTranslatorScreen(
     viewModel: TranslatorViewModel,
     onNavigateBack: () -> Unit,
-    onPracticeInChat: (String, Language) -> Unit
+    onPracticeInChat: (String, Language) -> Unit,
+    nativeLangCode: String = "de"
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     var showSourceLangMenu by remember { mutableStateOf(false) }
     var showTargetLangMenu by remember { mutableStateOf(false) }
@@ -130,13 +134,13 @@ fun InteractiveTranslatorScreen(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Interaktiver Übersetzer",
+                        text = strings.translatorHeaderTitle,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = TextPrimary
                     )
                     Text(
-                        text = "AI-gestützte Übersetzung & Sprachanalyse",
+                        text = strings.translatorHeaderSubtitle,
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
@@ -312,17 +316,21 @@ fun InteractiveTranslatorScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Stil:",
+                        text = "${strings.styleLabel}:",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextSecondary
                     )
-                    listOf("Natural", "Formal", "Informal").forEach { style ->
-                        val isSelected = uiState.formalityPreference == style
+                    listOf(
+                        "Natural" to strings.styleNatural,
+                        "Formal" to strings.styleFormal,
+                        "Informal" to strings.styleInformal
+                    ).forEach { (styleKey, localizedLabel) ->
+                        val isSelected = uiState.formalityPreference == styleKey
                         FilterChip(
                             selected = isSelected,
-                            onClick = { viewModel.setFormalityPreference(style) },
-                            label = { Text(style, fontSize = 12.sp) },
+                            onClick = { viewModel.setFormalityPreference(styleKey) },
+                            label = { Text(localizedLabel, fontSize = 12.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PrimaryIndigo,
                                 selectedLabelColor = Color.White
@@ -352,7 +360,7 @@ fun InteractiveTranslatorScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Ausgangstext (${uiState.sourceLanguage.name})",
+                                text = "${strings.sourceTextLabel} (${uiState.sourceLanguage.name})",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextSecondary
@@ -377,7 +385,7 @@ fun InteractiveTranslatorScreen(
                         OutlinedTextField(
                             value = uiState.sourceText,
                             onValueChange = { viewModel.setSourceText(it) },
-                            placeholder = { Text("Hier Wort oder Satz eingeben...", color = Color(0xFF94A3B8), fontSize = 15.sp) },
+                            placeholder = { Text(strings.inputPlaceholder, color = Color(0xFF94A3B8), fontSize = 15.sp) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("translator_input_field"),
@@ -406,7 +414,7 @@ fun InteractiveTranslatorScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                        contentDescription = "Speak Source",
+                                        contentDescription = strings.listenAudioLabel,
                                         tint = TextPrimary,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -429,7 +437,7 @@ fun InteractiveTranslatorScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Analysiere...", fontSize = 14.sp)
+                                    Text(strings.analyzingButton, fontSize = 14.sp)
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
@@ -437,7 +445,7 @@ fun InteractiveTranslatorScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Übersetzen", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(strings.translateButton, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -449,7 +457,7 @@ fun InteractiveTranslatorScreen(
             item {
                 Column {
                     Text(
-                        text = "Häufige Phrasen zum Schnell-Übersetzen",
+                        text = strings.quickPhrasesTitle,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -522,12 +530,17 @@ fun InteractiveTranslatorScreen(
                                         )
                                     }
 
+                                    val localizedFormality = when (res.formality) {
+                                        "Formal" -> strings.styleFormal
+                                        "Informal" -> strings.styleInformal
+                                        else -> strings.styleNatural
+                                    }
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
                                         color = SecondaryAmberLight
                                     ) {
                                         Text(
-                                            text = res.formality,
+                                            text = localizedFormality,
                                             color = SecondaryAmber,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.SemiBold,
@@ -567,30 +580,45 @@ fun InteractiveTranslatorScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 // Action Buttons Row (Listen, Copy, Practice in Chat)
+                                val isSpeakingThis = uiState.isSpeaking && uiState.currentSpeakingId == res.translatedText
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    IconButton(
-                                        onClick = { viewModel.speakText(res.translatedText, res.targetLanguage) },
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = if (isSpeakingThis) PrimaryIndigo else PrimaryIndigoLight,
                                         modifier = Modifier
-                                            .size(40.dp)
-                                            .background(PrimaryIndigoLight, CircleShape)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { viewModel.speakText(res.translatedText, res.targetLanguage, res.translatedText) }
+                                            .testTag("listen_translation_button")
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                            contentDescription = "Listen",
-                                            tint = PrimaryIndigo,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSpeakingThis) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                contentDescription = if (isSpeakingThis) strings.stopAudioLabel else strings.listenAudioLabel,
+                                                tint = if (isSpeakingThis) Color.White else PrimaryIndigo,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = if (isSpeakingThis) strings.stopAudioLabel else strings.listenAudioLabel,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isSpeakingThis) Color.White else PrimaryIndigo
+                                            )
+                                        }
                                     }
 
                                     IconButton(
                                         onClick = {
                                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                             clipboard.setPrimaryClip(ClipData.newPlainText("Translation", res.translatedText))
-                                            Toast.makeText(context, "In Zwischenablage kopiert", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, strings.copiedToClipboard, Toast.LENGTH_SHORT).show()
                                         },
                                         modifier = Modifier
                                             .size(40.dp)
@@ -598,7 +626,7 @@ fun InteractiveTranslatorScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.ContentCopy,
-                                            contentDescription = "Copy",
+                                            contentDescription = strings.copyButtonLabel,
                                             tint = TextSecondary,
                                             modifier = Modifier.size(18.dp)
                                         )
@@ -618,7 +646,7 @@ fun InteractiveTranslatorScreen(
                                             modifier = Modifier.size(14.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Im Chat üben", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(strings.practiceInChatAction, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
 
@@ -626,7 +654,7 @@ fun InteractiveTranslatorScreen(
                                 if (res.breakdown.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Text(
-                                        text = "Wort-für-Wort Zerlegung",
+                                        text = strings.wordBreakdownTitle,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = TextSecondary
@@ -673,7 +701,7 @@ fun InteractiveTranslatorScreen(
                                     ) {
                                         Column(modifier = Modifier.padding(10.dp)) {
                                             Text(
-                                                text = "💡 Grammatik- & Kultur-Hinweis",
+                                                text = strings.grammarCultureNoteTitle,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 12.sp,
                                                 color = Color(0xFF166534)
@@ -693,7 +721,7 @@ fun InteractiveTranslatorScreen(
                                 if (res.alternatives.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Text(
-                                        text = "Alternative Redewendungen",
+                                        text = strings.alternativePhrasesTitle,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = TextSecondary
@@ -701,34 +729,36 @@ fun InteractiveTranslatorScreen(
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                         res.alternatives.forEach { alt ->
+                                            val isSpeakingAlt = uiState.isSpeaking && uiState.currentSpeakingId == alt
                                             Surface(
                                                 shape = RoundedCornerShape(10.dp),
-                                                color = Color(0xFFF8FAFC),
-                                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                                color = if (isSpeakingAlt) PrimaryIndigoLight else Color(0xFFF8FAFC),
+                                                border = BorderStroke(1.dp, if (isSpeakingAlt) PrimaryIndigo else Color(0xFFE2E8F0)),
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clip(RoundedCornerShape(10.dp))
                                                     .clickable {
-                                                        viewModel.speakText(alt, res.targetLanguage)
+                                                        viewModel.speakText(alt, res.targetLanguage, alt)
                                                     }
+                                                    .testTag("speak_alt_${alt.take(10)}")
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Text("•", color = PrimaryIndigo, fontWeight = FontWeight.Bold)
-                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Icon(
+                                                        imageVector = if (isSpeakingAlt) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                        contentDescription = if (isSpeakingAlt) strings.stopAudioLabel else strings.listenAudioLabel,
+                                                        tint = PrimaryIndigo,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
                                                         text = alt,
                                                         fontSize = 13.sp,
                                                         color = TextPrimary,
+                                                        fontWeight = if (isSpeakingAlt) FontWeight.SemiBold else FontWeight.Normal,
                                                         modifier = Modifier.weight(1f)
-                                                    )
-                                                    Icon(
-                                                        imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                                        contentDescription = "Speak",
-                                                        tint = TextSecondary,
-                                                        modifier = Modifier.size(16.dp)
                                                     )
                                                 }
                                             }
@@ -750,7 +780,7 @@ fun InteractiveTranslatorScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Verlauf (${uiState.history.size})",
+                            text = "${strings.historyTitle} (${uiState.history.size})",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -758,7 +788,7 @@ fun InteractiveTranslatorScreen(
                         IconButton(onClick = { viewModel.clearHistory() }) {
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
-                                contentDescription = "Clear History",
+                                contentDescription = strings.clearHistoryButton,
                                 tint = TextSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -796,6 +826,27 @@ fun InteractiveTranslatorScreen(
                                     color = TextPrimary
                                 )
                             }
+
+                            val isSpeakingHist = uiState.isSpeaking && uiState.currentSpeakingId == item.translatedText
+                            IconButton(
+                                onClick = {
+                                    val tgtLang = SupportedLanguages.find { it.code == item.targetLangCode } ?: uiState.targetLanguage
+                                    viewModel.speakText(item.translatedText, tgtLang, item.translatedText)
+                                },
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(if (isSpeakingHist) PrimaryIndigo else Color(0xFFF1F5F9), CircleShape)
+                                    .testTag("history_tts_button_${item.id}")
+                            ) {
+                                Icon(
+                                    imageVector = if (isSpeakingHist) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                    contentDescription = if (isSpeakingHist) strings.stopAudioLabel else strings.listenAudioLabel,
+                                    tint = if (isSpeakingHist) Color.White else PrimaryIndigo,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
 
                             IconButton(
                                 onClick = { viewModel.toggleBookmark(item.id) },

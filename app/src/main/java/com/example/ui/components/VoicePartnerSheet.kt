@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +59,7 @@ import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.SecondaryTeal
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,9 +77,11 @@ fun VoicePartnerSheet(
     onStartListening: () -> Unit,
     onStopListening: () -> Unit,
     onStopSpeaking: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    nativeLangCode: String = "de"
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -103,7 +107,7 @@ fun VoicePartnerSheet(
                         Text(text = language.flag, fontSize = 22.sp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Live Voice Partner",
+                            text = strings.voicePartnerTitle,
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
@@ -151,10 +155,10 @@ fun VoicePartnerSheet(
 
             // State Status Label
             val statusText = when {
-                isGenerating -> "Maya is thinking..."
-                isSpeaking -> "Maya is speaking..."
-                isListening -> "Listening to your ${language.name}..."
-                else -> "Tap the microphone to speak"
+                isGenerating -> strings.voiceStatusThinking
+                isSpeaking -> strings.voiceStatusSpeaking
+                isListening -> strings.voiceStatusListening
+                else -> strings.voiceStatusTapMic
             }
             Text(
                 text = statusText,
@@ -204,7 +208,7 @@ fun VoicePartnerSheet(
                         )
                     } else {
                         Text(
-                            text = "Speak naturally in ${language.name}. Maya will respond in real-time.",
+                            text = "${strings.voiceStatusListening} (${language.name})",
                             color = Color(0xFF64748B),
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center
@@ -222,7 +226,7 @@ fun VoicePartnerSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "AI Speed:",
+                    text = "${strings.voiceSpeedLabel}:",
                     color = Color(0xFF94A3B8),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -230,9 +234,9 @@ fun VoicePartnerSheet(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 listOf(
-                    0.8f to "0.8x Slow",
-                    1.0f to "1.0x Normal",
-                    1.2f to "1.2x Fast"
+                    0.8f to "0.8x",
+                    1.0f to "1.0x",
+                    1.2f to "1.2x"
                 ).forEach { (speed, label) ->
                     val isSelected = kotlin.math.abs(speechSpeed - speed) < 0.05f
                     Surface(

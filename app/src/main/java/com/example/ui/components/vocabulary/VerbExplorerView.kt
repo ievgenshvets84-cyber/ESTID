@@ -55,6 +55,7 @@ import com.example.ui.theme.PrimaryIndigoLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+import com.example.ui.util.AppLocalization
 
 @Composable
 fun VerbExplorerView(
@@ -65,8 +66,11 @@ fun VerbExplorerView(
     onSpeak: (String) -> Unit,
     onToggleBookmark: (VocabularyWordEntity) -> Unit,
     onAiDeepDive: (VocabularyWordEntity) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -76,7 +80,7 @@ fun VerbExplorerView(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChanged,
-            placeholder = { Text("Search verbs (e.g. hablar, essen, manger)...", style = MaterialTheme.typography.bodyMedium) },
+            placeholder = { Text(strings.searchPlaceholder, style = MaterialTheme.typography.bodyMedium) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -125,13 +129,13 @@ fun VerbExplorerView(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = "Verb Tables & Conjugations (${verbs.size} Verbs)",
+                        text = "${strings.tabVerbs} & ${strings.conjugationTableTitle} (${verbs.size})",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryIndigo
                     )
                     Text(
-                        text = "Tap any verb to view all tenses, moods, participles & audio forms.",
+                        text = strings.fullVerbTableSubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = TextSecondary
                     )
@@ -150,7 +154,7 @@ fun VerbExplorerView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (searchQuery.isBlank()) "Loading verbs database..." else "No verbs found matching \"$searchQuery\"",
+                    text = strings.noWordsFound,
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )
@@ -168,7 +172,9 @@ fun VerbExplorerView(
                         onOpenTable = { onOpenVerbTable(verb) },
                         onSpeak = { onSpeak(verb.word) },
                         onToggleBookmark = { onToggleBookmark(verb) },
-                        onAiDeepDive = { onAiDeepDive(verb) }
+                        onAiDeepDive = { onAiDeepDive(verb) },
+                        tenseLabel = strings.tensePresent,
+                        buttonLabel = strings.conjugationTableTitle
                     )
                 }
                 item {
@@ -185,7 +191,9 @@ private fun VerbItemCard(
     onOpenTable: () -> Unit,
     onSpeak: () -> Unit,
     onToggleBookmark: () -> Unit,
-    onAiDeepDive: () -> Unit
+    onAiDeepDive: () -> Unit,
+    tenseLabel: String,
+    buttonLabel: String
 ) {
     // Quick preview of present tense forms
     val tableData = remember(verb.word) {
@@ -302,7 +310,7 @@ private fun VerbItemCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Present: $quickForms...",
+                        text = "$tenseLabel: $quickForms...",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = Color(0xFF64748B),
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
@@ -332,7 +340,7 @@ private fun VerbItemCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "View Verb Table (${tableData.tenses.size} Tenses)",
+                    text = "$buttonLabel (${tableData.tenses.size})",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )

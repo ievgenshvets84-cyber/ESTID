@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +56,7 @@ import com.example.ui.theme.SuccessGreenLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+import com.example.ui.util.AppLocalization
 
 @Composable
 fun PronunciationDrillView(
@@ -67,11 +69,14 @@ fun PronunciationDrillView(
     onStopListening: () -> Unit,
     onSpeak: (String) -> Unit,
     onNextWord: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     if (word == null) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No word selected for pronunciation", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+            Text(strings.noWordsFound, style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
         }
         return
     }
@@ -104,7 +109,7 @@ fun PronunciationDrillView(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Pronunciation Coach • Listen & Repeat",
+                    text = "${strings.drillTitle} • ${strings.drillInstruction}",
                     style = MaterialTheme.typography.labelSmall,
                     color = PrimaryIndigo,
                     fontWeight = FontWeight.Bold,
@@ -170,7 +175,7 @@ fun PronunciationDrillView(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Listen Native Audio",
+                        text = strings.listenWord,
                         style = MaterialTheme.typography.labelMedium,
                         color = PrimaryIndigo,
                         fontWeight = FontWeight.SemiBold
@@ -201,7 +206,7 @@ fun PronunciationDrillView(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Score: $score% Accuracy",
+                            text = "${strings.quizScore}: $score%",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (score >= 80) SuccessGreen else Color(0xFF92400E)
@@ -210,7 +215,7 @@ fun PronunciationDrillView(
                         if (recognizedText.isNotBlank()) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Heard: \"$recognizedText\"",
+                                text = "${strings.heardText}: \"$recognizedText\"",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -229,14 +234,14 @@ fun PronunciationDrillView(
                 }
             } else if (isListening) {
                 Text(
-                    text = "Listening... Speak clearly into the microphone!",
+                    text = strings.listeningState,
                     style = MaterialTheme.typography.bodyMedium,
                     color = AccentCoral,
                     fontWeight = FontWeight.Medium
                 )
             } else {
                 Text(
-                    text = "Tap the microphone below and pronounce the word",
+                    text = strings.tapMicToSpeak,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextTertiary
                 )
@@ -279,7 +284,7 @@ fun PronunciationDrillView(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = TextPrimary)
             ) {
-                Text(text = "Next Word", fontWeight = FontWeight.SemiBold)
+                Text(text = strings.nextWordButton, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.width(6.dp))
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
             }

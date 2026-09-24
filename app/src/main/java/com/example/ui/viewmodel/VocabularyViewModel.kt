@@ -11,6 +11,12 @@ import com.example.data.models.SupportedLanguages
 import com.example.data.speech.SpeechRecognizerManager
 import com.example.data.tts.TtsManager
 import com.example.data.vocabulary.FrequencyTier
+import com.example.data.vocabulary.PhraseCategory
+import com.example.data.vocabulary.PhraseItem
+import com.example.data.vocabulary.PhraseLearningRepository
+import com.example.data.vocabulary.PhraseQuizQuestion
+import com.example.data.vocabulary.PhraseSubMode
+import com.example.data.vocabulary.VocabularyLocalizationHelper
 import com.example.data.vocabulary.VocabularyRepository
 import com.example.data.vocabulary.VocabularyTiers
 import kotlinx.coroutines.Job
@@ -24,6 +30,7 @@ enum class VocabularyMode {
     FLASHCARDS,
     EXPLORER,
     VERBS,
+    PHRASES,
     QUIZ,
     PRONUNCIATION
 }
@@ -45,6 +52,7 @@ data class QuizQuestion(
 
 data class VocabularyUiState(
     val selectedLanguage: Language = SupportedLanguages[0],
+    val nativeLanguage: Language = SupportedLanguages.find { it.code == "de" } ?: SupportedLanguages[1],
     val currentTier: FrequencyTier = VocabularyTiers[0],
     val currentStage: Int = 1, // Stage 1 (1-100), Stage 2 (101-200), ... up to 100 (9901-10000)
     val totalStages: Int = 100,
@@ -60,6 +68,24 @@ data class VocabularyUiState(
     val verbSearchQuery: String = "",
     val verbsList: List<VocabularyWordEntity> = emptyList(),
     val filteredVerbsList: List<VocabularyWordEntity> = emptyList(),
+
+    // Phrases & Idioms state
+    val phrasesList: List<PhraseItem> = emptyList(),
+    val filteredPhrasesList: List<PhraseItem> = emptyList(),
+    val selectedPhraseCategory: PhraseCategory = PhraseCategory.ALL,
+    val phraseSearchQuery: String = "",
+    val phraseSubMode: PhraseSubMode = PhraseSubMode.BROWSE,
+    val currentPhraseTrainerIndex: Int = 0,
+    val isPhraseTrainerFlipped: Boolean = false,
+    val phraseQuizQuestions: List<PhraseQuizQuestion> = emptyList(),
+    val currentPhraseQuizIndex: Int = 0,
+    val selectedPhraseQuizAnswer: Int? = null,
+    val isPhraseQuizSubmitted: Boolean = false,
+    val phraseQuizScore: Int = 0,
+    val isPhraseQuizFinished: Boolean = false,
+    val selectedPhraseForDeepDive: PhraseItem? = null,
+    val phraseDeepDiveContent: String? = null,
+    val isPhraseDeepDiveLoading: Boolean = false,
 
     // Flashcards
     val currentFlashcardIndex: Int = 0,
@@ -109,11 +135,50 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
     private var setupJob: Job? = null
     private var verbsJob: Job? = null
 
+    private var rawWords: List<VocabularyWordEntity> = emptyList()
+    private var rawVerbs: List<VocabularyWordEntity> = emptyList()
+
     init {
         val savedLangCode = prefs.getString("selected_lang", "es") ?: "es"
         val initialLang = SupportedLanguages.find { it.code == savedLangCode } ?: SupportedLanguages[0]
-        _uiState.update { it.copy(selectedLanguage = initialLang) }
+        val savedNativeCode = prefs.getString("native_lang", "de") ?: "de"
+        val initialNative = SupportedLanguages.find { it.code == savedNativeCode } ?: SupportedLanguages[1]
+        _uiState.update { it.copy(selectedLanguage = initialLang, nativeLanguage = initialNative) }
+        loadPhrases(initialLang.code, initialNative.code)
         setupLanguage(initialLang)
+    }
+
+    fun setNativeLanguage(language: Language) {
+        if (_uiState.value.nativeLanguage.code == language.code) return
+        prefs.edit().putString("native_lang", language.code).apply()
+        _uiState.update { it.copy(nativeLanguage = language) }
+        loadPhrases(_uiState.value.selectedLanguage.code, language.code)
+
+        // Immediately re-localize loaded words & verbs with the newly chosen native language
+        val localizedWords = VocabularyLocalizationHelper.localizeWords(rawWords, language.code)
+        val localizedVerbs = VocabularyLocalizationHelper.localizeWords(rawVerbs, language.code)
+
+        _uiState.update { state ->
+            val filteredW = applyFilterAndSearch(localizedWords, state.filterStatus, state.searchQuery)
+            val filteredV = if (state.verbSearchQuery.isBlank()) {
+                localizedVerbs
+            } else {
+                val q = state.verbSearchQuery.trim().lowercase()
+                localizedVerbs.filter {
+                    it.word.lowercase().contains(q) || it.translation.lowercase().contains(q)
+                }
+            }
+            state.copy(
+                words = localizedWords,
+                filteredWords = filteredW,
+                verbsList = localizedVerbs,
+                filteredVerbsList = filteredV
+            )
+        }
+
+        if (_uiState.value.currentMode == VocabularyMode.QUIZ) {
+            startNewQuiz()
+        }
     }
 
     fun setLanguage(language: Language) {
@@ -133,9 +198,13 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
                 drillFeedback = null,
                 drillScore = null,
                 selectedVerbForTable = null,
-                verbSearchQuery = ""
+                verbSearchQuery = "",
+                phraseSearchQuery = "",
+                currentPhraseTrainerIndex = 0,
+                isPhraseTrainerFlipped = false
             )
         }
+        loadPhrases(language.code, _uiState.value.nativeLanguage.code)
         setupLanguage(language)
     }
 
@@ -144,6 +213,7 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
         setupJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             repository.initializeLanguageIfNeeded(language.code)
+            repository.loadStageWords(language.code, 1, 100)
             observeWordData(language.code, _uiState.value.currentStage)
             observeStats(language.code)
             observeVerbs(language.code)
@@ -155,16 +225,18 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
         verbsJob?.cancel()
         verbsJob = viewModelScope.launch {
             repository.getVerbsForLanguage(languageCode).collect { verbs ->
+                rawVerbs = verbs
+                val localized = VocabularyLocalizationHelper.localizeWords(verbs, _uiState.value.nativeLanguage.code)
                 _uiState.update { state ->
                     val filtered = if (state.verbSearchQuery.isBlank()) {
-                        verbs
+                        localized
                     } else {
                         val q = state.verbSearchQuery.trim().lowercase()
-                        verbs.filter {
+                        localized.filter {
                             it.word.lowercase().contains(q) || it.translation.lowercase().contains(q)
                         }
                     }
-                    state.copy(verbsList = verbs, filteredVerbsList = filtered)
+                    state.copy(verbsList = localized, filteredVerbsList = filtered)
                 }
             }
         }
@@ -241,10 +313,12 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
 
         wordsJob = viewModelScope.launch {
             repository.getWordsByRankRange(languageCode, startRank, endRank).collect { wordList ->
+                rawWords = wordList
+                val localized = VocabularyLocalizationHelper.localizeWords(wordList, _uiState.value.nativeLanguage.code)
                 _uiState.update { state ->
-                    val filtered = applyFilterAndSearch(wordList, state.filterStatus, state.searchQuery)
+                    val filtered = applyFilterAndSearch(localized, state.filterStatus, state.searchQuery)
                     state.copy(
-                        words = wordList,
+                        words = localized,
                         filteredWords = filtered
                     )
                 }
@@ -353,8 +427,10 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
     // Quiz Mode Actions
     fun startNewQuiz() {
         viewModelScope.launch {
-            val samplePool = repository.getRandomQuizWords(_uiState.value.selectedLanguage.code, 20)
-            if (samplePool.size < 4) return@launch
+            val rawPool = repository.getRandomQuizWords(_uiState.value.selectedLanguage.code, 20)
+            if (rawPool.size < 4) return@launch
+            val samplePool = VocabularyLocalizationHelper.localizeWords(rawPool, _uiState.value.nativeLanguage.code)
+            val nativeCode = _uiState.value.nativeLanguage.code
 
             val questions = samplePool.take(10).map { targetWord ->
                 val distractors = samplePool
@@ -366,9 +442,23 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
                 val allOptions = (distractors + targetWord.translation).shuffled()
                 val correctIdx = allOptions.indexOf(targetWord.translation)
 
+                val prompt = when (nativeCode) {
+                    "de" -> "Was bedeutet „${targetWord.word}“?"
+                    "ru" -> "Что означает «${targetWord.word}»?"
+                    "uk" -> "Що означає «${targetWord.word}»?"
+                    "fr" -> "Que signifie « ${targetWord.word} » ?"
+                    "es" -> "¿Qué significa \"${targetWord.word}\"?"
+                    "it" -> "Cosa significa «${targetWord.word}»?"
+                    "pt" -> "O que significa \"${targetWord.word}\"?"
+                    "zh" -> "“${targetWord.word}”是什么意思？"
+                    "ja" -> "「${targetWord.word}」の意味は何ですか？"
+                    "ko" -> "“${targetWord.word}”의 뜻은 무엇인가요?"
+                    else -> "What is the meaning of \"${targetWord.word}\"?"
+                }
+
                 QuizQuestion(
                     word = targetWord,
-                    promptText = "What is the meaning of \"${targetWord.word}\"?",
+                    promptText = prompt,
                     options = allOptions,
                     correctIndex = correctIdx
                 )
@@ -536,7 +626,8 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
             val content = geminiService.getWordDeepDive(
                 word = word.word,
                 translation = word.translation,
-                language = _uiState.value.selectedLanguage
+                language = _uiState.value.selectedLanguage,
+                nativeLanguage = _uiState.value.nativeLanguage
             )
             _uiState.update {
                 it.copy(
@@ -550,6 +641,225 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
     fun closeWordDeepDive() {
         _uiState.update {
             it.copy(deepDiveWord = null, deepDiveContent = null, isDeepDiveLoading = false)
+        }
+    }
+
+    // ==========================================
+    // PHRASES & IDIOMS LEARNING ENGINE
+    // ==========================================
+
+    fun loadPhrases(targetLang: String, nativeLang: String) {
+        val phrases = PhraseLearningRepository.getPhrases(targetLang, nativeLang)
+        val filtered = filterPhrases(phrases, _uiState.value.selectedPhraseCategory, _uiState.value.phraseSearchQuery)
+        val quiz = generatePhraseQuiz(phrases)
+        _uiState.update {
+            it.copy(
+                phrasesList = phrases,
+                filteredPhrasesList = filtered,
+                currentPhraseTrainerIndex = 0,
+                isPhraseTrainerFlipped = false,
+                phraseQuizQuestions = quiz,
+                currentPhraseQuizIndex = 0,
+                selectedPhraseQuizAnswer = null,
+                isPhraseQuizSubmitted = false,
+                phraseQuizScore = 0,
+                isPhraseQuizFinished = false
+            )
+        }
+    }
+
+    private fun filterPhrases(list: List<PhraseItem>, cat: PhraseCategory, query: String): List<PhraseItem> {
+        val q = query.trim().lowercase()
+        return list.filter { item ->
+            val matchesCategory = when (cat) {
+                PhraseCategory.ALL -> true
+                PhraseCategory.IDIOMS -> item.isIdiom
+                PhraseCategory.BOOKMARKED -> item.isBookmarked
+                else -> item.category == cat
+            }
+            val matchesQuery = if (q.isBlank()) true else {
+                item.phrase.lowercase().contains(q) ||
+                        item.meaning.lowercase().contains(q) ||
+                        item.literalMeaning.lowercase().contains(q) ||
+                        item.phonetic.lowercase().contains(q)
+            }
+            matchesCategory && matchesQuery
+        }
+    }
+
+    fun setPhraseCategory(category: PhraseCategory) {
+        _uiState.update { state ->
+            val filtered = filterPhrases(state.phrasesList, category, state.phraseSearchQuery)
+            state.copy(
+                selectedPhraseCategory = category,
+                filteredPhrasesList = filtered,
+                currentPhraseTrainerIndex = 0,
+                isPhraseTrainerFlipped = false
+            )
+        }
+    }
+
+    fun onPhraseSearchChanged(query: String) {
+        _uiState.update { state ->
+            val filtered = filterPhrases(state.phrasesList, state.selectedPhraseCategory, query)
+            state.copy(
+                phraseSearchQuery = query,
+                filteredPhrasesList = filtered,
+                currentPhraseTrainerIndex = 0,
+                isPhraseTrainerFlipped = false
+            )
+        }
+    }
+
+    fun togglePhraseBookmark(phraseId: String) {
+        _uiState.update { state ->
+            val updated = state.phrasesList.map { item ->
+                if (item.id == phraseId) item.copy(isBookmarked = !item.isBookmarked) else item
+            }
+            val filtered = filterPhrases(updated, state.selectedPhraseCategory, state.phraseSearchQuery)
+            state.copy(phrasesList = updated, filteredPhrasesList = filtered)
+        }
+    }
+
+    fun setPhraseSubMode(mode: PhraseSubMode) {
+        _uiState.update {
+            it.copy(
+                phraseSubMode = mode,
+                isPhraseTrainerFlipped = false
+            )
+        }
+    }
+
+    fun nextPhraseTrainerCard() {
+        val max = _uiState.value.filteredPhrasesList.size
+        if (max == 0) return
+        _uiState.update {
+            it.copy(
+                currentPhraseTrainerIndex = (it.currentPhraseTrainerIndex + 1) % max,
+                isPhraseTrainerFlipped = false
+            )
+        }
+    }
+
+    fun prevPhraseTrainerCard() {
+        val max = _uiState.value.filteredPhrasesList.size
+        if (max == 0) return
+        _uiState.update {
+            val newIdx = if (it.currentPhraseTrainerIndex - 1 < 0) max - 1 else it.currentPhraseTrainerIndex - 1
+            it.copy(
+                currentPhraseTrainerIndex = newIdx,
+                isPhraseTrainerFlipped = false
+            )
+        }
+    }
+
+    fun flipPhraseTrainerCard() {
+        _uiState.update { it.copy(isPhraseTrainerFlipped = !it.isPhraseTrainerFlipped) }
+    }
+
+    private fun generatePhraseQuiz(phrases: List<PhraseItem>): List<PhraseQuizQuestion> {
+        val idiomsAndPhrases = phrases.filter { it.meaning.isNotBlank() }
+        if (idiomsAndPhrases.size < 3) return emptyList()
+
+        return idiomsAndPhrases.shuffled().take(8).map { item ->
+            val wrongOptions = idiomsAndPhrases
+                .filter { it.id != item.id }
+                .shuffled()
+                .take(3)
+                .map { it.meaning }
+
+            val allOptions = (wrongOptions + item.meaning).shuffled()
+            val correctIdx = allOptions.indexOf(item.meaning)
+            PhraseQuizQuestion(
+                phrase = item,
+                options = allOptions,
+                correctIndex = correctIdx,
+                explanation = "Wörtlich: \"${item.literalMeaning}\" → Eigentliche Bedeutung: \"${item.meaning}\""
+            )
+        }
+    }
+
+    fun answerPhraseQuiz(selectedIndex: Int) {
+        val state = _uiState.value
+        if (state.isPhraseQuizSubmitted) return
+        val currentQ = state.phraseQuizQuestions.getOrNull(state.currentPhraseQuizIndex) ?: return
+        val isCorrect = selectedIndex == currentQ.correctIndex
+        val newScore = if (isCorrect) state.phraseQuizScore + 1 else state.phraseQuizScore
+
+        _uiState.update {
+            it.copy(
+                selectedPhraseQuizAnswer = selectedIndex,
+                isPhraseQuizSubmitted = true,
+                phraseQuizScore = newScore
+            )
+        }
+    }
+
+    fun nextPhraseQuizQuestion() {
+        val state = _uiState.value
+        val nextIdx = state.currentPhraseQuizIndex + 1
+        if (nextIdx < state.phraseQuizQuestions.size) {
+            _uiState.update {
+                it.copy(
+                    currentPhraseQuizIndex = nextIdx,
+                    selectedPhraseQuizAnswer = null,
+                    isPhraseQuizSubmitted = false
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(isPhraseQuizFinished = true)
+            }
+        }
+    }
+
+    fun restartPhraseQuiz() {
+        val newQuestions = generatePhraseQuiz(_uiState.value.phrasesList)
+        _uiState.update {
+            it.copy(
+                phraseQuizQuestions = newQuestions,
+                currentPhraseQuizIndex = 0,
+                selectedPhraseQuizAnswer = null,
+                isPhraseQuizSubmitted = false,
+                phraseQuizScore = 0,
+                isPhraseQuizFinished = false
+            )
+        }
+    }
+
+    fun openPhraseDeepDive(phrase: PhraseItem) {
+        _uiState.update {
+            it.copy(
+                selectedPhraseForDeepDive = phrase,
+                phraseDeepDiveContent = null,
+                isPhraseDeepDiveLoading = true
+            )
+        }
+        viewModelScope.launch {
+            val content = geminiService.getPhraseDeepDive(
+                phrase = phrase.phrase,
+                literalMeaning = phrase.literalMeaning,
+                meaning = phrase.meaning,
+                isIdiom = phrase.isIdiom,
+                language = _uiState.value.selectedLanguage,
+                nativeLanguage = _uiState.value.nativeLanguage
+            )
+            _uiState.update {
+                it.copy(
+                    phraseDeepDiveContent = content,
+                    isPhraseDeepDiveLoading = false
+                )
+            }
+        }
+    }
+
+    fun closePhraseDeepDive() {
+        _uiState.update {
+            it.copy(
+                selectedPhraseForDeepDive = null,
+                phraseDeepDiveContent = null,
+                isPhraseDeepDiveLoading = false
+            )
         }
     }
 

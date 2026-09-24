@@ -72,6 +72,7 @@ import com.example.ui.theme.SecondaryAmberLight
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,9 +82,11 @@ fun ScenarioSelectorSheet(
     onSelectScenario: (PracticeScenario) -> Unit,
     onSpeakPhrase: ((String) -> Unit)? = null,
     onPracticePhraseInChat: ((String) -> Unit)? = null,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    nativeLangCode: String = "de"
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     var selectedTabIndex by remember { mutableStateOf(0) } // 0: Scenarios (100), 1: Phrases (100)
     var selectedLevelFilter by remember { mutableStateOf("ALL") } // "ALL", "A1", "A2", "B1", "B2", "C1"
@@ -138,13 +141,13 @@ fun ScenarioSelectorSheet(
             ) {
                 Column {
                     Text(
-                        text = "Praxis-Szenarien & Phrasen",
+                        text = strings.scenarioSheetTitle,
                         color = TextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "100 Rollenspiele & 100 Phrasen je Niveau (${selectedLanguage?.name ?: "Spanisch"})",
+                        text = "${strings.scenarioSheetSubtitle} (${selectedLanguage?.name ?: "Spanisch"})",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -152,7 +155,7 @@ fun ScenarioSelectorSheet(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Schließen",
+                        contentDescription = "Close",
                         tint = TextSecondary
                     )
                 }
@@ -174,7 +177,7 @@ fun ScenarioSelectorSheet(
                     onClick = { selectedTabIndex = 0 },
                     text = {
                         Text(
-                            text = "🎭 100 Szenarien (${filteredScenarios.size})",
+                            text = "🎭 ${strings.scenarioTabScenarios} (${filteredScenarios.size})",
                             fontWeight = if (selectedTabIndex == 0) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 13.sp
                         )
@@ -185,7 +188,7 @@ fun ScenarioSelectorSheet(
                     onClick = { selectedTabIndex = 1 },
                     text = {
                         Text(
-                            text = "💬 100 Phrasen ($currentLevelForPhrases)",
+                            text = "💬 ${strings.scenarioTabPhrases} ($currentLevelForPhrases)",
                             fontWeight = if (selectedTabIndex == 1) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 13.sp
                         )
@@ -201,7 +204,7 @@ fun ScenarioSelectorSheet(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = if (selectedTabIndex == 0) "Szenario suchen (z.B. Café, Job, Reise)..." else "Phrase oder Bedeutung suchen...",
+                        text = if (selectedTabIndex == 0) strings.searchScenarioPlaceholder else strings.searchPhrasePlaceholder,
                         fontSize = 13.sp,
                         color = Color(0xFF94A3B8)
                     )

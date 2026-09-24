@@ -48,6 +48,12 @@ fun MainContainerScreen(
     val conversationState by conversationViewModel.uiState.collectAsStateWithLifecycle()
     val vocabularyState by vocabularyViewModel.uiState.collectAsStateWithLifecycle()
 
+    // Sync native language with translator source language and vocabulary view model
+    androidx.compose.runtime.LaunchedEffect(conversationState.nativeLanguage) {
+        translatorViewModel.setSourceLanguage(conversationState.nativeLanguage)
+        vocabularyViewModel.setNativeLanguage(conversationState.nativeLanguage)
+    }
+
     // Unidirectional language selection handler: updates both view models without reactive circular loops
     val onLanguageSelected: (com.example.data.models.Language) -> Unit = { newLanguage ->
         if (conversationState.selectedLanguage.code != newLanguage.code) {
@@ -58,6 +64,14 @@ fun MainContainerScreen(
         }
         translatorViewModel.setTargetLanguage(newLanguage)
     }
+
+    val onNativeLanguageSelected: (com.example.data.models.Language) -> Unit = { newNativeLanguage ->
+        conversationViewModel.selectNativeLanguage(newNativeLanguage)
+        vocabularyViewModel.setNativeLanguage(newNativeLanguage)
+        translatorViewModel.setSourceLanguage(newNativeLanguage)
+    }
+
+    val strings = com.example.ui.util.AppLocalization.getStrings(conversationState.nativeLanguage.code)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -73,12 +87,12 @@ fun MainContainerScreen(
                     icon = {
                         Icon(
                             imageVector = if (selectedTab == 0) Icons.Default.ChatBubble else Icons.Outlined.ChatBubbleOutline,
-                            contentDescription = "Conversation Partner"
+                            contentDescription = strings.navPartner
                         )
                     },
                     label = {
                         Text(
-                            text = "AI Partner",
+                            text = strings.navPartner,
                             fontSize = 12.sp,
                             fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
                         )
@@ -99,12 +113,12 @@ fun MainContainerScreen(
                     icon = {
                         Icon(
                             imageVector = if (selectedTab == 1) Icons.Default.School else Icons.Outlined.School,
-                            contentDescription = "10,000 Words"
+                            contentDescription = strings.navVocabulary
                         )
                     },
                     label = {
                         Text(
-                            text = "10,000 Wörter",
+                            text = strings.navVocabulary,
                             fontSize = 12.sp,
                             fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
                         )
@@ -125,12 +139,12 @@ fun MainContainerScreen(
                     icon = {
                         Icon(
                             imageVector = if (selectedTab == 2) Icons.Default.Translate else Icons.Outlined.Translate,
-                            contentDescription = "Interactive Translator"
+                            contentDescription = strings.navTranslator
                         )
                     },
                     label = {
                         Text(
-                            text = "Übersetzer",
+                            text = strings.navTranslator,
                             fontSize = 12.sp,
                             fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal
                         )
@@ -158,14 +172,16 @@ fun MainContainerScreen(
                         viewModel = conversationViewModel,
                         onNavigateToWordLearning = { selectedTab = 1 },
                         onNavigateToTranslator = { selectedTab = 2 },
-                        onLanguageSelected = onLanguageSelected
+                        onLanguageSelected = onLanguageSelected,
+                        onNativeLanguageSelected = onNativeLanguageSelected
                     )
                 }
 
                 1 -> {
                     WordLearningScreen(
                         viewModel = vocabularyViewModel,
-                        onLanguageSelected = onLanguageSelected
+                        onLanguageSelected = onLanguageSelected,
+                        onNativeLanguageSelected = onNativeLanguageSelected
                     )
                 }
 

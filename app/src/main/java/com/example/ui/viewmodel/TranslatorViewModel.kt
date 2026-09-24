@@ -24,7 +24,9 @@ data class TranslatorUiState(
     val isTranslating: Boolean = false,
     val translationResult: TranslationResult? = null,
     val history: List<TranslationHistoryItem> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isSpeaking: Boolean = false,
+    val currentSpeakingId: String? = null
 )
 
 class TranslatorViewModel(
@@ -38,6 +40,18 @@ class TranslatorViewModel(
     val uiState: StateFlow<TranslatorUiState> = _uiState.asStateFlow()
 
     init {
+        // Observe TTS state
+        viewModelScope.launch {
+            ttsManager.isSpeaking.collect { speaking ->
+                _uiState.update { it.copy(isSpeaking = speaking) }
+            }
+        }
+        viewModelScope.launch {
+            ttsManager.currentUtteranceId.collect { id ->
+                _uiState.update { it.copy(currentSpeakingId = id) }
+            }
+        }
+
         // Pre-fill starter history for discovery
         val starterHistory = listOf(
             TranslationHistoryItem(
@@ -161,8 +175,17 @@ class TranslatorViewModel(
         _uiState.update { it.copy(history = emptyList()) }
     }
 
-    fun speakText(text: String, language: Language) {
-        ttsManager.speak(text, language.ttsLocale, 1.0f)
+    fun speakText(text: String, language: Language, utteranceId: String = text) {
+        if (_uiState.value.isSpeaking && _uiState.value.currentSpeakingId == utteranceId) {
+            ttsManager.stop()
+        } else {
+            ttsManager.stop()
+            ttsManager.speak(text, language.ttsLocale, 1.0f, utteranceId)
+        }
+    }
+
+    fun stopSpeaking() {
+        ttsManager.stop()
     }
 
     val quickPhrases = listOf(

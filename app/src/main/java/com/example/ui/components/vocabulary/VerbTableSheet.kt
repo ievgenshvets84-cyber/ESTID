@@ -64,15 +64,19 @@ import com.example.ui.theme.SuccessGreenLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+import com.example.ui.util.AppLocalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerbTableSheet(
     word: VocabularyWordEntity?,
     onDismiss: () -> Unit,
-    onSpeak: (String) -> Unit
+    onSpeak: (String) -> Unit,
+    nativeLangCode: String = "de"
 ) {
     if (word == null) return
+
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
 
     val tableData = remember(word) {
         VerbConjugationEngine.getConjugationTable(word)
@@ -117,13 +121,13 @@ fun VerbTableSheet(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Verb Conjugation Table",
+                            text = strings.conjugationTableTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = "All using forms & interactive audio",
+                            text = strings.fullVerbTableSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -136,7 +140,7 @@ fun VerbTableSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = strings.closeButton,
                         tint = TextSecondary
                     )
                 }

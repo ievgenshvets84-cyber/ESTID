@@ -41,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +62,7 @@ import com.example.ui.theme.SuccessGreenLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+import com.example.ui.util.AppLocalization
 
 @Composable
 fun FlashcardView(
@@ -75,15 +77,18 @@ fun FlashcardView(
     onToggleBookmark: (VocabularyWordEntity) -> Unit,
     onSpeak: (String) -> Unit,
     onAiDeepDive: (VocabularyWordEntity) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nativeLangCode: String = "de"
 ) {
+    val strings = remember(nativeLangCode) { AppLocalization.getStrings(nativeLangCode) }
+
     if (word == null) {
         Box(
             modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No words available in this stage yet.",
+                text = strings.noWordsFound,
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextSecondary
             )
@@ -112,7 +117,7 @@ fun FlashcardView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Card ${currentIndex + 1} of $totalCount",
+                    text = "${strings.flashcardTitle} ${currentIndex + 1} ${strings.stageOf} $totalCount",
                     style = MaterialTheme.typography.labelLarge,
                     color = TextSecondary,
                     fontWeight = FontWeight.SemiBold
@@ -140,9 +145,9 @@ fun FlashcardView(
                     ) {
                         Text(
                             text = when (word.masteryLevel) {
-                                3 -> "Mastered"
-                                1, 2 -> "Learning"
-                                else -> "New"
+                                3 -> strings.masteredBadgeWord
+                                1, 2 -> strings.learningBadgeWord
+                                else -> strings.newBadgeWord
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = if (word.masteryLevel >= 3) SuccessGreen else TextSecondary,
@@ -190,7 +195,8 @@ fun FlashcardView(
                         word = word,
                         onSpeak = { onSpeak(word.word) },
                         onToggleBookmark = { onToggleBookmark(word) },
-                        onAiDeepDive = { onAiDeepDive(word) }
+                        onAiDeepDive = { onAiDeepDive(word) },
+                        hintText = strings.tapToRevealDetails
                     )
                 } else {
                     // Back of card (rotated 180 so it appears normal)
@@ -203,7 +209,9 @@ fun FlashcardView(
                             word = word,
                             onSpeak = { onSpeak(word.word) },
                             onToggleBookmark = { onToggleBookmark(word) },
-                            onAiDeepDive = { onAiDeepDive(word) }
+                            onAiDeepDive = { onAiDeepDive(word) },
+                            exampleLabel = "${strings.sectionExample}:",
+                            flipBackText = strings.tapToReturnWord
                         )
                     }
                 }
@@ -231,7 +239,7 @@ fun FlashcardView(
                 ) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Learning", fontWeight = FontWeight.SemiBold)
+                    Text(text = strings.learningBadgeWord, fontWeight = FontWeight.SemiBold)
                 }
 
                 Button(
@@ -245,7 +253,7 @@ fun FlashcardView(
                 ) {
                     Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Mastered", fontWeight = FontWeight.Bold)
+                    Text(text = strings.masteredBadgeWord, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -281,7 +289,7 @@ fun FlashcardView(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isFlipped) "Tap to see word" else "Tap to flip & see meaning",
+                        text = if (isFlipped) strings.tapToReturnWord else strings.tapToRevealDetails,
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -308,7 +316,8 @@ private fun FrontCardContent(
     word: VocabularyWordEntity,
     onSpeak: () -> Unit,
     onToggleBookmark: () -> Unit,
-    onAiDeepDive: () -> Unit
+    onAiDeepDive: () -> Unit,
+    hintText: String
 ) {
     Column(
         modifier = Modifier
@@ -402,7 +411,7 @@ private fun FrontCardContent(
 
         // Bottom flip hint
         Text(
-            text = "Tap card to reveal definition & sentences",
+            text = hintText,
             style = MaterialTheme.typography.bodySmall,
             color = TextTertiary
         )
@@ -414,7 +423,9 @@ private fun BackCardContent(
     word: VocabularyWordEntity,
     onSpeak: () -> Unit,
     onToggleBookmark: () -> Unit,
-    onAiDeepDive: () -> Unit
+    onAiDeepDive: () -> Unit,
+    exampleLabel: String,
+    flipBackText: String
 ) {
     Column(
         modifier = Modifier
@@ -493,7 +504,7 @@ private fun BackCardContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Example in context:",
+                                text = exampleLabel,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextSecondary,
                                 fontWeight = FontWeight.SemiBold
@@ -536,7 +547,7 @@ private fun BackCardContent(
 
         // Bottom hint
         Text(
-            text = "Tap to flip back",
+            text = flipBackText,
             style = MaterialTheme.typography.bodySmall,
             color = TextTertiary
         )

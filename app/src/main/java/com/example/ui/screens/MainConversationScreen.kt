@@ -77,8 +77,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.data.models.Language
 import com.example.data.models.MessageSender
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.SwapHoriz
 import com.example.ui.components.LanguageSelectorSheet
 import com.example.ui.components.MessageItem
+import com.example.ui.components.NativeLanguageSelectorSheet
 import com.example.ui.components.SavedVocabSheet
 import com.example.ui.components.ScenarioGoalCard
 import com.example.ui.components.ScenarioSelectorSheet
@@ -103,7 +106,8 @@ fun MainConversationScreen(
     modifier: Modifier = Modifier,
     onNavigateToWordLearning: (() -> Unit)? = null,
     onNavigateToTranslator: (() -> Unit)? = null,
-    onLanguageSelected: ((Language) -> Unit)? = null
+    onLanguageSelected: ((Language) -> Unit)? = null,
+    onNativeLanguageSelected: ((Language) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -113,6 +117,7 @@ fun MainConversationScreen(
 
     var inputText by remember { mutableStateOf("") }
     var showLanguageSheet by remember { mutableStateOf(false) }
+    var showNativeLanguageSheet by remember { mutableStateOf(false) }
     var showScenarioSheet by remember { mutableStateOf(false) }
     var showSavedVocabSheet by remember { mutableStateOf(false) }
 
@@ -427,12 +432,107 @@ fun MainConversationScreen(
                 .padding(innerPadding)
                 .background(Color(0xFFF8FAFC))
         ) {
+            // Language Pairing Bar (Lernsprache & Muttersprache)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = Color.White,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                shadowElevation = 1.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Lernsprache Selector
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = PrimaryIndigoLight,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryIndigo.copy(alpha = 0.25f)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable { showLanguageSheet = true }
+                            .testTag("main_target_language_chip")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "🎯 Lerne:", fontSize = 11.sp, color = PrimaryIndigo, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = uiState.selectedLanguage.flag, fontSize = 15.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = uiState.selectedLanguage.name,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryIndigo
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = PrimaryIndigo,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.SwapHoriz,
+                        contentDescription = "Sprachpaar",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    // Muttersprache Selector
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color(0xFFF1F5F9),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable { showNativeLanguageSheet = true }
+                            .testTag("main_native_language_chip")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "🗣️ Muttersprache:", fontSize = 11.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = uiState.nativeLanguage.flag, fontSize = 15.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = uiState.nativeLanguage.name,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             // Scenario Goals Card at top of conversation
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 ScenarioGoalCard(
                     scenario = uiState.selectedScenario,
                     turnsCount = uiState.messages.count { it.sender == MessageSender.USER },
-                    onClick = { showScenarioSheet = true }
+                    onClick = { showScenarioSheet = true },
+                    nativeLangCode = uiState.nativeLanguage.code
                 )
             }
 
@@ -461,15 +561,19 @@ fun MainConversationScreen(
                                 viewModel.speakMessage(msg)
                             }
                         },
+                        onSpeakAlternative = { alt ->
+                            viewModel.speakText(alt)
+                        },
                         onSaveWordClick = { word, trans, ctx ->
                             viewModel.saveVocabulary(word, trans, ctx)
-                        }
+                        },
+                        nativeLangCode = uiState.nativeLanguage.code
                     )
                 }
 
                 if (uiState.isGenerating) {
                     item {
-                        TypingIndicatorBubble()
+                        TypingIndicatorBubble(nativeLangCode = uiState.nativeLanguage.code)
                     }
                 }
             }
@@ -485,7 +589,19 @@ fun MainConversationScreen(
                 onLanguageSelected?.invoke(lang) ?: viewModel.selectLanguage(lang)
             },
             onSelectLevel = { viewModel.selectLevel(it) },
-            onDismiss = { showLanguageSheet = false }
+            onDismiss = { showLanguageSheet = false },
+            nativeLangCode = uiState.nativeLanguage.code
+        )
+    }
+
+    if (showNativeLanguageSheet) {
+        NativeLanguageSelectorSheet(
+            currentNativeLanguage = uiState.nativeLanguage,
+            onSelectNativeLanguage = { lang ->
+                viewModel.selectNativeLanguage(lang)
+                onNativeLanguageSelected?.invoke(lang)
+            },
+            onDismiss = { showNativeLanguageSheet = false }
         )
     }
 
@@ -500,7 +616,8 @@ fun MainConversationScreen(
             onPracticePhraseInChat = { phrase ->
                 viewModel.sendMessage(phrase)
             },
-            onDismiss = { showScenarioSheet = false }
+            onDismiss = { showScenarioSheet = false },
+            nativeLangCode = uiState.nativeLanguage.code
         )
     }
 
@@ -515,7 +632,8 @@ fun MainConversationScreen(
                 showSavedVocabSheet = false
                 onNavigateToWordLearning?.invoke()
             },
-            onDismiss = { showSavedVocabSheet = false }
+            onDismiss = { showSavedVocabSheet = false },
+            nativeLangCode = uiState.nativeLanguage.code
         )
     }
 
@@ -546,7 +664,8 @@ fun MainConversationScreen(
             },
             onStopListening = { viewModel.stopVoiceRecording() },
             onStopSpeaking = { viewModel.stopSpeaking() },
-            onDismiss = { viewModel.setVoiceMode(false) }
+            onDismiss = { viewModel.setVoiceMode(false) },
+            nativeLangCode = uiState.nativeLanguage.code
         )
     }
 }
