@@ -31,8 +31,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -73,11 +71,11 @@ import com.example.ui.viewmodel.FilterStatus
 fun WordExplorerView(
     words: List<VocabularyWordEntity>,
     searchQuery: String,
-    filterStatus: FilterStatus,
+    filterStatus: FilterStatus = FilterStatus.ALL,
     currentStage: Int,
     totalStages: Int,
     onSearchChanged: (String) -> Unit,
-    onFilterChanged: (FilterStatus) -> Unit,
+    onFilterChanged: ((FilterStatus) -> Unit)? = null,
     onSelectStage: (Int) -> Unit,
     onJumpToRank: (Int) -> Unit,
     onSpeak: (String) -> Unit,
@@ -255,37 +253,39 @@ fun WordExplorerView(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Filter status chips
+        // Stage Header & Word Count Info
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            FilterStatus.entries.forEach { status ->
-                val isSelected = (filterStatus == status)
-                val label = when (status) {
-                    FilterStatus.ALL -> "${strings.filterAll} (${words.size})"
-                    FilterStatus.VERBS -> strings.filterVerbs
-                    FilterStatus.TO_LEARN -> strings.filterToLearn
-                    FilterStatus.MASTERED -> strings.filterMastered
-                    FilterStatus.BOOKMARKED -> strings.filterBookmarked
-                }
-
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onFilterChanged(status) },
-                    label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = PrimaryIndigoLight,
-                        selectedLabelColor = PrimaryIndigo
-                    ),
-                    modifier = Modifier.testTag("filter_chip_${status.name}")
+            val startRank = (currentStage - 1) * 100 + 1
+            val endRank = currentStage * 100
+            Text(
+                text = "${strings.stageLabel} $currentStage (#$startRank–#$endRank)",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryIndigo
+            )
+            Surface(
+                color = PrimaryIndigoLight,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "${words.size} ${if (words.size == 1) "Wort" else "Wörter"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryIndigo,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // Word Items List
         if (words.isEmpty()) {
@@ -295,11 +295,29 @@ fun WordExplorerView(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = strings.noWordsFound,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = strings.noWordsFound,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = PrimaryIndigoLight,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .clickable { onSelectStage(currentStage) }
+                            .testTag("reload_stage_words_btn")
+                    ) {
+                        Text(
+                            text = "${strings.stageLabel} $currentStage laden",
+                            color = PrimaryIndigo,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        )
+                    }
+                }
             }
         } else {
             LazyColumn(

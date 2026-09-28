@@ -246,7 +246,23 @@ data class AppUiStrings(
     val streakTipText: String = "Bereits 5 Minuten tägliche Praxis festigen das Gelernte dauerhaft im Gedächtnis.",
     val streakCelebrateTitle: String = "Serie verlängert! 🔥",
     val streakCelebrateSubtitle: String = "Super gemacht! Du übst seit %d Tagen in Folge.",
-    val streakKeepPracticingButton: String = "Weiter üben"
+    val streakKeepPracticingButton: String = "Weiter üben",
+
+    // Adaptive Quiz Engine Strings
+    val adaptiveQuizTitle: String = "Adaptives Quiz",
+    val adaptiveDifficultyLabel: String = "Adaptive Stufe",
+    val reinforcementBadge: String = "Verstärkungsmodus",
+    val reinforcementSubtitle: String = "Leichtere Aufgabe zur Festigung des Grundwortschatzes",
+    val challengeBadge: String = "Erhöhte Herausforderung",
+    val challengeSubtitle: String = "Komplexere Aufgabe basierend auf deiner Leistung",
+    val adaptiveProgressionTitle: String = "Schwierigkeitsverlauf",
+    val adaptiveStartingDiffLabel: String = "Startstufe",
+    val adaptivePeakDiffLabel: String = "Höchste Stufe",
+    val adaptiveFinalDiffLabel: String = "Endstufe",
+    val reinforcementSuccessLabel: String = "Verstärkungen gemeistert",
+    val challengesSuccessLabel: String = "Herausforderungen gelöst",
+    val adaptiveReportTitle: String = "Adaptiver Leistungsbericht",
+    val restartAdaptiveQuiz: String = "Neues adaptives Quiz starten"
 )
 
 object AppLocalization {

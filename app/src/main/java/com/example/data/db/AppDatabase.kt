@@ -2,15 +2,13 @@ package com.example.data.db
 
 import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
 
 @Database(
     entities = [VocabularyWordEntity::class],
     version = 3,
     exportSchema = false
 )
-abstract class AppDatabase : RoomDatabase() {
+abstract class AppDatabase {
 
     abstract fun vocabularyDao(): VocabularyDao
 
@@ -20,13 +18,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "lingua_vocabulary_database"
-                )
-                    .fallbackToDestructiveMigration(true)
-                    .build()
+                val instance = SQLiteAppDatabase(context.applicationContext)
                 INSTANCE = instance
                 instance
             }

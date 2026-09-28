@@ -9,13 +9,18 @@ import com.example.data.db.VocabularyWordEntity
 import com.example.data.models.Language
 import com.example.data.models.SupportedLanguages
 import com.example.data.speech.SpeechRecognizerManager
+import com.example.data.streak.DailyStreakManager
 import com.example.data.tts.TtsManager
+import com.example.data.vocabulary.AdaptiveQuizEngine
+import com.example.data.vocabulary.AdaptiveQuizSummary
 import com.example.data.vocabulary.FrequencyTier
 import com.example.data.vocabulary.PhraseCategory
 import com.example.data.vocabulary.PhraseItem
 import com.example.data.vocabulary.PhraseLearningRepository
 import com.example.data.vocabulary.PhraseQuizQuestion
 import com.example.data.vocabulary.PhraseSubMode
+import com.example.data.vocabulary.QuizQuestion
+import com.example.data.vocabulary.QuizQuestionType
 import com.example.data.vocabulary.VocabularyLocalizationHelper
 import com.example.data.vocabulary.VocabularyRepository
 import com.example.data.vocabulary.VocabularyTiers
@@ -42,13 +47,6 @@ enum class FilterStatus {
     MASTERED,
     BOOKMARKED
 }
-
-data class QuizQuestion(
-    val word: VocabularyWordEntity,
-    val promptText: String,
-    val options: List<String>,
-    val correctIndex: Int
-)
 
 data class VocabularyUiState(
     val selectedLanguage: Language = SupportedLanguages[0],
@@ -91,7 +89,7 @@ data class VocabularyUiState(
     val currentFlashcardIndex: Int = 0,
     val isCardFlipped: Boolean = false,
 
-    // Quiz
+    // Quiz (Adaptive Dynamic Difficulty Adjustment)
     val currentQuizIndex: Int = 0,
     val quizQuestions: List<QuizQuestion> = emptyList(),
     val selectedQuizAnswer: Int? = null,
@@ -99,6 +97,11 @@ data class VocabularyUiState(
     val quizScore: Int = 0,
     val quizStreak: Int = 0,
     val isQuizFinished: Boolean = false,
+    val currentQuizDifficulty: Int = 2,
+    val peakQuizDifficulty: Int = 2,
+    val quizAdaptiveFeedback: String? = null,
+    val quizSummary: AdaptiveQuizSummary? = null,
+    val totalQuizQuestionsCount: Int = 12,
 
     // Pronunciation drill
     val isDrillListening: Boolean = false,
@@ -265,7 +268,7 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun setMode(mode: VocabularyMode) {
-        _uiState.update { it.copy(currentMode = mode, isCardFlipped = false) }
+        _uiState.update { it.copy(currentMode = mode, isCardFlipped = false, filterStatus = FilterStatus.ALL) }
         if (mode == VocabularyMode.QUIZ && _uiState.value.quizQuestions.isEmpty()) {
             startNewQuiz()
         }
@@ -289,6 +292,7 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
                 currentTier = tier,
                 currentFlashcardIndex = 0,
                 isCardFlipped = false,
+                filterStatus = FilterStatus.ALL,
                 isLoading = true
             )
         }
@@ -424,55 +428,55 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
         ttsManager.speak(word, _uiState.value.selectedLanguage.ttsLocale, 0.9f)
     }
 
-    // Quiz Mode Actions
+    // Quiz Mode Actions (Adaptive Dynamic Difficulty Adjustment)
+    private var adaptiveQuizEngine: AdaptiveQuizEngine? = null
+    private val adaptiveWordPools = mutableMapOf<Int, List<VocabularyWordEntity>>()
+    private var cachedDistractorPool: List<VocabularyWordEntity> = emptyList()
+
     fun startNewQuiz() {
         viewModelScope.launch {
-            val rawPool = repository.getRandomQuizWords(_uiState.value.selectedLanguage.code, 20)
-            if (rawPool.size < 4) return@launch
-            val samplePool = VocabularyLocalizationHelper.localizeWords(rawPool, _uiState.value.nativeLanguage.code)
-            val nativeCode = _uiState.value.nativeLanguage.code
+            val targetLang = _uiState.value.selectedLanguage
+            val nativeLang = _uiState.value.nativeLanguage
 
-            val questions = samplePool.take(10).map { targetWord ->
-                val distractors = samplePool
-                    .filter { it.id != targetWord.id }
-                    .shuffled()
-                    .take(3)
-                    .map { it.translation }
+            val engine = AdaptiveQuizEngine(
+                nativeLangCode = nativeLang.code,
+                targetLangName = targetLang.name,
+                initialDifficulty = 2
+            )
+            adaptiveQuizEngine = engine
+            adaptiveWordPools.clear()
 
-                val allOptions = (distractors + targetWord.translation).shuffled()
-                val correctIdx = allOptions.indexOf(targetWord.translation)
-
-                val prompt = when (nativeCode) {
-                    "de" -> "Was bedeutet „${targetWord.word}“?"
-                    "ru" -> "Что означает «${targetWord.word}»?"
-                    "uk" -> "Що означає «${targetWord.word}»?"
-                    "fr" -> "Que signifie « ${targetWord.word} » ?"
-                    "es" -> "¿Qué significa \"${targetWord.word}\"?"
-                    "it" -> "Cosa significa «${targetWord.word}»?"
-                    "pt" -> "O que significa \"${targetWord.word}\"?"
-                    "zh" -> "“${targetWord.word}”是什么意思？"
-                    "ja" -> "「${targetWord.word}」の意味は何ですか？"
-                    "ko" -> "“${targetWord.word}”의 뜻은 무엇인가요?"
-                    else -> "What is the meaning of \"${targetWord.word}\"?"
-                }
-
-                QuizQuestion(
-                    word = targetWord,
-                    promptText = prompt,
-                    options = allOptions,
-                    correctIndex = correctIdx
-                )
+            // Preload words for all 5 difficulty levels so adaptive generation is instantaneous
+            for (level in 1..5) {
+                val words = repository.getAdaptiveWordsForDifficulty(targetLang.code, level, 20)
+                val localized = VocabularyLocalizationHelper.localizeWords(words, nativeLang.code)
+                adaptiveWordPools[level] = localized
             }
+
+            val broadPool = repository.getRandomQuizWords(targetLang.code, 40)
+            cachedDistractorPool = VocabularyLocalizationHelper.localizeWords(broadPool, nativeLang.code)
+
+            // Starting question at Level 2 (Elementary)
+            val poolL2 = adaptiveWordPools[2] ?: cachedDistractorPool
+            val startWord = poolL2.firstOrNull() ?: cachedDistractorPool.firstOrNull()
+            if (startWord == null) return@launch
+
+            val initialQuestion = engine.createQuestion(startWord, cachedDistractorPool)
 
             _uiState.update {
                 it.copy(
-                    quizQuestions = questions,
+                    quizQuestions = listOf(initialQuestion),
                     currentQuizIndex = 0,
                     selectedQuizAnswer = null,
                     isQuizAnswerSubmitted = false,
                     quizScore = 0,
                     quizStreak = 0,
-                    isQuizFinished = false
+                    isQuizFinished = false,
+                    currentQuizDifficulty = engine.currentDifficulty,
+                    peakQuizDifficulty = engine.peakDifficulty,
+                    quizAdaptiveFeedback = null,
+                    quizSummary = null,
+                    totalQuizQuestionsCount = 12
                 )
             }
         }
@@ -482,39 +486,77 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
         val state = _uiState.value
         if (state.isQuizAnswerSubmitted || state.isQuizFinished) return
 
-        val question = state.quizQuestions.getOrNull(state.currentQuizIndex) ?: return
-        val isCorrect = (index == question.correctIndex)
-        val newScore = if (isCorrect) state.quizScore + 10 else state.quizScore
-        val newStreak = if (isCorrect) state.quizStreak + 1 else 0
+        val currentQ = state.quizQuestions.getOrNull(state.currentQuizIndex) ?: return
+        val engine = adaptiveQuizEngine ?: return
+
+        // Evaluate answer and dynamically adjust difficulty
+        val (isCorrect, feedback) = engine.onAnswerSubmitted(currentQ, index)
+
+        // Dynamically prepare next adaptive question based on updated difficulty
+        val nextQuestions = state.quizQuestions.toMutableList()
+        val nextQuestionIdx = state.currentQuizIndex + 1
+
+        if (nextQuestionIdx < state.totalQuizQuestionsCount) {
+            val targetLevel = engine.currentDifficulty
+            val levelPool = adaptiveWordPools[targetLevel] ?: cachedDistractorPool
+
+            val nextWord = levelPool.firstOrNull { it.id !in engine.usedWordIds }
+                ?: cachedDistractorPool.firstOrNull { it.id !in engine.usedWordIds }
+                ?: levelPool.shuffled().firstOrNull()
+                ?: currentQ.word
+
+            val nextQuestion = engine.createQuestion(nextWord, cachedDistractorPool)
+            if (nextQuestions.size <= nextQuestionIdx) {
+                nextQuestions.add(nextQuestion)
+            } else {
+                nextQuestions[nextQuestionIdx] = nextQuestion
+            }
+        }
 
         _uiState.update {
             it.copy(
                 selectedQuizAnswer = index,
                 isQuizAnswerSubmitted = true,
-                quizScore = newScore,
-                quizStreak = newStreak
+                quizScore = engine.score,
+                quizStreak = engine.streak,
+                currentQuizDifficulty = engine.currentDifficulty,
+                peakQuizDifficulty = engine.peakDifficulty,
+                quizAdaptiveFeedback = feedback,
+                quizQuestions = nextQuestions
             )
         }
 
-        // Update word mastery in background
+        // Update word mastery in Room database and record daily streak activity
         viewModelScope.launch {
-            val newMastery = if (isCorrect) (question.word.masteryLevel + 1).coerceAtMost(3) else 1
-            repository.updateMastery(question.word.id, newMastery)
+            val newMastery = if (isCorrect) (currentQ.word.masteryLevel + 1).coerceAtMost(3) else 1
+            repository.updateMastery(currentQ.word.id, newMastery)
+            DailyStreakManager.getInstance(getApplication()).recordVocabTask()
         }
     }
 
     fun nextQuizQuestion() {
         val state = _uiState.value
-        if (state.currentQuizIndex + 1 < state.quizQuestions.size) {
+        val engine = adaptiveQuizEngine
+
+        val nextIdx = state.currentQuizIndex + 1
+        if (nextIdx < state.totalQuizQuestionsCount && nextIdx < state.quizQuestions.size) {
             _uiState.update {
                 it.copy(
-                    currentQuizIndex = it.currentQuizIndex + 1,
+                    currentQuizIndex = nextIdx,
                     selectedQuizAnswer = null,
-                    isQuizAnswerSubmitted = false
+                    isQuizAnswerSubmitted = false,
+                    quizAdaptiveFeedback = null
                 )
             }
         } else {
-            _uiState.update { it.copy(isQuizFinished = true) }
+            // Quiz completed! Generate adaptive summary report
+            val summary = engine?.createSummary()
+            _uiState.update {
+                it.copy(
+                    isQuizFinished = true,
+                    quizSummary = summary
+                )
+            }
         }
     }
 

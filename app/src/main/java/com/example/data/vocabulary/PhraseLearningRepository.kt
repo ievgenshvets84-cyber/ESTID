@@ -1,17 +1,26 @@
 package com.example.data.vocabulary
 
+import com.example.data.vocabulary.phrases.SituationalPhrasesData
+import com.example.data.vocabulary.phrases.SituationalPhrasesDataPart2
+import com.example.data.vocabulary.phrases.SituationalPhrasesDataPart3
+import com.example.data.vocabulary.phrases.SituationalPhrasesDataPart4
+import com.example.data.vocabulary.phrases.WesternIdiomsData
+
 object PhraseLearningRepository {
 
     fun getPhrases(targetLanguage: String, nativeLanguage: String = "de"): List<PhraseItem> {
-        val rawList = when (targetLanguage.lowercase()) {
+        val target = targetLanguage.lowercase()
+        val native = nativeLanguage.lowercase()
+
+        val idioms = when (target) {
             "uk" -> getUkrainianPhrases()
             "ru" -> getRussianPhrases()
-            "es" -> getSpanishPhrases()
-            "fr" -> getFrenchPhrases()
-            "de" -> getGermanPhrases()
-            "en" -> getEnglishPhrases()
-            "it" -> getItalianPhrases()
-            "pt" -> getPortuguesePhrases()
+            "es" -> getSpanishPhrases() + WesternIdiomsData.getWesternIdioms("es", native)
+            "fr" -> getFrenchPhrases() + WesternIdiomsData.getWesternIdioms("fr", native)
+            "de" -> getGermanPhrases() + WesternIdiomsData.getWesternIdioms("de", native)
+            "en" -> getEnglishPhrases() + WesternIdiomsData.getWesternIdioms("en", native)
+            "it" -> getItalianPhrases() + WesternIdiomsData.getWesternIdioms("it", native)
+            "pt" -> getPortuguesePhrases() + WesternIdiomsData.getWesternIdioms("pt", native)
             "ja" -> getJapanesePhrases()
             "zh" -> getChinesePhrases()
             "ko" -> getKoreanPhrases()
@@ -19,11 +28,21 @@ object PhraseLearningRepository {
         }
 
         // Return list; if nativeLanguage is not German ("de"), localize meanings
-        return if (nativeLanguage.lowercase() == "de") {
-            rawList
+        val localizedIdioms = if (native == "de") {
+            idioms
         } else {
-            localizePhrases(rawList, nativeLanguage)
+            localizePhrases(idioms, native)
         }
+
+        // Situational everyday phrases with full multi-language coverage across categories
+        val part1 = SituationalPhrasesData.getCorePhrasesForLanguage(target, native)
+        val part2 = SituationalPhrasesDataPart2.getPart2PhrasesForLanguage(target, native)
+        val part3 = SituationalPhrasesDataPart3.getPart3PhrasesForLanguage(target, native)
+        val part4 = SituationalPhrasesDataPart4.getPart4PhrasesForLanguage(target, native)
+
+        // Combine all and ensure distinct entries
+        return (localizedIdioms + part1 + part2 + part3 + part4)
+            .distinctBy { it.phrase.trim().lowercase() }
     }
 
     // ==========================================
@@ -835,6 +854,43 @@ object PhraseLearningRepository {
             exampleTranslation = "Das Leben besteht aus siebenmal hinfallen und achtmal aufstehen. Gib niemals auf!"
         ),
         PhraseItem(
+            id = "ja_idiom_4",
+            languageCode = "ja",
+            phrase = "一期一会",
+            phonetic = "Ichigo ichie",
+            literalMeaning = "Ein einziges Mal, ein einziges Treffen",
+            meaning = "Jeden Augenblick und jede Begegnung schätzen, da sie unwiederholbar ist",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "旅先での出会いは一期一会だから大切にしよう。",
+            exampleTranslation = "Begegnungen auf Reisen sind einmalig, lasst sie uns wertschätzen.",
+            culturalTip = "Ein zentraler Begriff der japanischen Philosophie und Teezeremonie."
+        ),
+        PhraseItem(
+            id = "ja_idiom_5",
+            languageCode = "ja",
+            phrase = "十人十色",
+            phonetic = "Jūnin toiro",
+            literalMeaning = "Zehn Menschen, zehn Farben",
+            meaning = "Jeder Mensch ist verschieden, Geschmäcker sind verschieden",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "人の好みは十人十色だから面白い。",
+            exampleTranslation = "Vorlieben von Menschen sind verschieden, genau das macht es interessant."
+        ),
+        PhraseItem(
+            id = "ja_idiom_6",
+            languageCode = "ja",
+            phrase = "石の上にも三年",
+            phonetic = "Ishi no ue ni mo sannen",
+            literalMeaning = "Sogar drei Jahre auf einem kalten Stein sitzen",
+            meaning = "Geduld und Beharrlichkeit führen letztendlich zum Erfolg",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "石の上にも三年、努力を続ければ道は開ける。",
+            exampleTranslation = "Ausdauer zahlt sich aus: Wenn du am Ball bleibst, wirst du Erfolg haben."
+        ),
+        PhraseItem(
             id = "ja_phrase_1",
             languageCode = "ja",
             phrase = "これはいくらですか？",
@@ -902,6 +958,42 @@ object PhraseLearningRepository {
             exampleTranslation = "Sei nicht traurig, oft ist ein Missgeschick ein verdeckter Glücksfall."
         ),
         PhraseItem(
+            id = "zh_idiom_4",
+            languageCode = "zh",
+            phrase = "入乡随俗",
+            phonetic = "Rù xiāng suí sú",
+            literalMeaning = "Ein Dorf betreten und den Bräuchen folgen",
+            meaning = "Andere Länder, andere Sitten; sich den örtlichen Gepflogenheiten anpassen",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "到了国外要入乡随俗，尊重当地习惯。",
+            exampleTranslation = "Im Ausland sollte man sich anpassen und die Bräuche vor Ort respektieren."
+        ),
+        PhraseItem(
+            id = "zh_idiom_5",
+            languageCode = "zh",
+            phrase = "半斤八两",
+            phonetic = "Bàn jīn bā liǎng",
+            literalMeaning = "Ein halbes Pfund oder acht Unzen",
+            meaning = "Gehupft wie gesprungen; beide sind gleich auf demselben Niveau",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "你们两个的水平半斤八两，别争了。",
+            exampleTranslation = "Ihr beiden seid auf genau demselben Niveau, streitet euch nicht."
+        ),
+        PhraseItem(
+            id = "zh_idiom_6",
+            languageCode = "zh",
+            phrase = "画蛇添足",
+            phonetic = "Huà shé tiān zú",
+            literalMeaning = "Einer Schlange Beine zeichnen",
+            meaning = "Des Guten zu viel tun, eine Sache durch überflüssige Zusätze verderben",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "文章已经很完美了，再加这段话就是画蛇添足。",
+            exampleTranslation = "Der Text war schon perfekt, dieser zusätzliche Absatz war des Guten zu viel."
+        ),
+        PhraseItem(
             id = "zh_phrase_1",
             languageCode = "zh",
             phrase = "这个多少钱？",
@@ -966,6 +1058,42 @@ object PhraseLearningRepository {
             isIdiom = true,
             exampleSentence = "망설이지 말고 시작해 보세요. 시작이 반이에요.",
             exampleTranslation = "Zögere nicht und fang einfach an. Ein guter Start ist die halbe Miete."
+        ),
+        PhraseItem(
+            id = "ko_idiom_4",
+            languageCode = "ko",
+            phrase = "고생 끝에 낙이 온다",
+            phonetic = "Go-saeng kkeut-e nag-i on-da",
+            literalMeaning = "Am Ende der Mühsal kommt die Freude",
+            meaning = "Nach getaner Arbeit kommt der Lohn; ohne Fleiß kein Preis",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "열심히 공부하면 고생 끝에 낙이 올 거예요.",
+            exampleTranslation = "Wenn du fleißig lernst, wirst du am Ende belohnt werden."
+        ),
+        PhraseItem(
+            id = "ko_idiom_5",
+            languageCode = "ko",
+            phrase = "원숭이도 나무에서 떨어진다",
+            phonetic = "Won-sung-i-do na-mu-e-seo tteol-eo-jin-da",
+            literalMeaning = "Auch Affen fallen vom Baum",
+            meaning = "Niemand ist unfehlbar; auch Experten machen Fehler",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "자책하지 마세요, 원숭이도 나무에서 떨어질 때가 있어요.",
+            exampleTranslation = "Mach dir keine Vorwürfe, selbst Experten machen mal Fehler."
+        ),
+        PhraseItem(
+            id = "ko_idiom_6",
+            languageCode = "ko",
+            phrase = "티끌 모아 태산",
+            phonetic = "Tik-kkeul mo-a tae-san",
+            literalMeaning = "Staubkörner sammeln und einen Berg bauen",
+            meaning = "Kleinvieh macht auch Mist; stetiges Sparen führt zum Ziel",
+            category = PhraseCategory.IDIOMS,
+            isIdiom = true,
+            exampleSentence = "작은 돈이라도 매달 저축하면 티끌 모아 태산이 돼요.",
+            exampleTranslation = "Auch wenn es wenig Geld ist: Wer jeden Monat spart, häuft mit der Zeit viel an."
         ),
         PhraseItem(
             id = "ko_phrase_1",

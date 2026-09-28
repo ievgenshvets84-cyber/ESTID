@@ -123,4 +123,21 @@ class VocabularyRepository(
             words
         }
     }
+
+    suspend fun getAdaptiveWordsForDifficulty(languageCode: String, level: Int, count: Int = 10): List<VocabularyWordEntity> = withContext(Dispatchers.IO) {
+        val (startRank, endRank) = when (level) {
+            1 -> Pair(1, 100)       // Foundational A1
+            2 -> Pair(101, 200)     // Elementary A2
+            3 -> Pair(201, 300)     // Intermediate B1
+            4 -> Pair(301, 400)     // Upper Intermediate B2
+            else -> Pair(401, 500)  // Advanced C1/C2
+        }
+        val words = vocabularyDao.getRandomWordsByRankRange(languageCode, startRank, endRank, count)
+        if (words.size < count) {
+            loadStageWords(languageCode, startRank, 100)
+            vocabularyDao.getRandomWordsByRankRange(languageCode, startRank, endRank, count)
+        } else {
+            words
+        }
+    }
 }

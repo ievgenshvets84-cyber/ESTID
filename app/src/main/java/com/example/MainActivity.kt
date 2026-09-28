@@ -14,6 +14,7 @@ import com.example.ui.viewmodel.VocabularyViewModel
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    com.example.data.db.AppDatabaseContextHolder.appContext = applicationContext
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme {

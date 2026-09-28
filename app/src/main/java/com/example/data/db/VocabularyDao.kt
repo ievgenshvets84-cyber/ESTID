@@ -70,6 +70,9 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary_words WHERE languageCode = :languageCode ORDER BY RANDOM() LIMIT :limit")
     suspend fun getRandomQuizWords(languageCode: String, limit: Int): List<VocabularyWordEntity>
 
+    @Query("SELECT * FROM vocabulary_words WHERE languageCode = :languageCode AND frequencyRank BETWEEN :startRank AND :endRank ORDER BY RANDOM() LIMIT :limit")
+    suspend fun getRandomWordsByRankRange(languageCode: String, startRank: Int, endRank: Int, limit: Int): List<VocabularyWordEntity>
+
     @Query("SELECT * FROM vocabulary_words WHERE languageCode = :languageCode AND frequencyRank BETWEEN :startRank AND :endRank ORDER BY frequencyRank ASC")
     suspend fun getWordsByRankRangeList(languageCode: String, startRank: Int, endRank: Int): List<VocabularyWordEntity>
 

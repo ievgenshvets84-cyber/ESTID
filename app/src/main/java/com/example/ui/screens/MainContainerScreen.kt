@@ -44,9 +44,15 @@ fun MainContainerScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var isVocabMenuCollapsed by rememberSaveable { androidx.compose.runtime.mutableStateOf(true) }
 
     val conversationState by conversationViewModel.uiState.collectAsStateWithLifecycle()
     val vocabularyState by vocabularyViewModel.uiState.collectAsStateWithLifecycle()
+
+    val isVocabFullscreenMode = selectedTab == 1 &&
+        (vocabularyState.currentMode == com.example.ui.viewmodel.VocabularyMode.FLASHCARDS ||
+         vocabularyState.currentMode == com.example.ui.viewmodel.VocabularyMode.EXPLORER) &&
+        isVocabMenuCollapsed
 
     // Sync native language with translator source language and vocabulary view model
     androidx.compose.runtime.LaunchedEffect(conversationState.nativeLanguage) {
@@ -76,88 +82,90 @@ fun MainContainerScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 6.dp,
-                modifier = Modifier.testTag("main_navigation_bar")
-            ) {
-                NavigationBarItem(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    icon = {
-                        Icon(
-                            imageVector = if (selectedTab == 0) Icons.Default.ChatBubble else Icons.Outlined.ChatBubbleOutline,
-                            contentDescription = strings.navPartner
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = strings.navPartner,
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryIndigo,
-                        selectedTextColor = PrimaryIndigo,
-                        indicatorColor = PrimaryIndigoLight,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary
-                    ),
-                    modifier = Modifier.testTag("nav_item_partner")
-                )
+            if (!isVocabFullscreenMode) {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 6.dp,
+                    modifier = Modifier.testTag("main_navigation_bar")
+                ) {
+                    NavigationBarItem(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        icon = {
+                            Icon(
+                                imageVector = if (selectedTab == 0) Icons.Default.ChatBubble else Icons.Outlined.ChatBubbleOutline,
+                                contentDescription = strings.navPartner
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = strings.navPartner,
+                                fontSize = 12.sp,
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryIndigo,
+                            selectedTextColor = PrimaryIndigo,
+                            indicatorColor = PrimaryIndigoLight,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        ),
+                        modifier = Modifier.testTag("nav_item_partner")
+                    )
 
-                NavigationBarItem(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    icon = {
-                        Icon(
-                            imageVector = if (selectedTab == 1) Icons.Default.School else Icons.Outlined.School,
-                            contentDescription = strings.navVocabulary
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = strings.navVocabulary,
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryIndigo,
-                        selectedTextColor = PrimaryIndigo,
-                        indicatorColor = PrimaryIndigoLight,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary
-                    ),
-                    modifier = Modifier.testTag("nav_item_words")
-                )
+                    NavigationBarItem(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        icon = {
+                            Icon(
+                                imageVector = if (selectedTab == 1) Icons.Default.School else Icons.Outlined.School,
+                                contentDescription = strings.navVocabulary
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = strings.navVocabulary,
+                                fontSize = 12.sp,
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryIndigo,
+                            selectedTextColor = PrimaryIndigo,
+                            indicatorColor = PrimaryIndigoLight,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        ),
+                        modifier = Modifier.testTag("nav_item_words")
+                    )
 
-                NavigationBarItem(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    icon = {
-                        Icon(
-                            imageVector = if (selectedTab == 2) Icons.Default.Translate else Icons.Outlined.Translate,
-                            contentDescription = strings.navTranslator
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = strings.navTranslator,
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryIndigo,
-                        selectedTextColor = PrimaryIndigo,
-                        indicatorColor = PrimaryIndigoLight,
-                        unselectedIconColor = TextSecondary,
-                        unselectedTextColor = TextSecondary
-                    ),
-                    modifier = Modifier.testTag("nav_item_translator")
-                )
+                    NavigationBarItem(
+                        selected = selectedTab == 2,
+                        onClick = { selectedTab = 2 },
+                        icon = {
+                            Icon(
+                                imageVector = if (selectedTab == 2) Icons.Default.Translate else Icons.Outlined.Translate,
+                                contentDescription = strings.navTranslator
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = strings.navTranslator,
+                                fontSize = 12.sp,
+                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryIndigo,
+                            selectedTextColor = PrimaryIndigo,
+                            indicatorColor = PrimaryIndigoLight,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        ),
+                        modifier = Modifier.testTag("nav_item_translator")
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -181,7 +189,11 @@ fun MainContainerScreen(
                     WordLearningScreen(
                         viewModel = vocabularyViewModel,
                         onLanguageSelected = onLanguageSelected,
-                        onNativeLanguageSelected = onNativeLanguageSelected
+                        onNativeLanguageSelected = onNativeLanguageSelected,
+                        isMenuCollapsed = isVocabMenuCollapsed,
+                        onToggleMenuCollapsed = { isVocabMenuCollapsed = it },
+                        onNavigateToPartner = { selectedTab = 0 },
+                        onNavigateToTranslator = { selectedTab = 2 }
                     )
                 }
 

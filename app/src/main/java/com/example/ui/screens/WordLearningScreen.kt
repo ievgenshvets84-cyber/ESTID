@@ -17,21 +17,29 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -45,6 +53,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,155 +91,186 @@ fun WordLearningScreen(
     viewModel: VocabularyViewModel,
     modifier: Modifier = Modifier,
     onLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null,
-    onNativeLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null
+    onNativeLanguageSelected: ((com.example.data.models.Language) -> Unit)? = null,
+    isMenuCollapsed: Boolean = true,
+    onToggleMenuCollapsed: ((Boolean) -> Unit)? = null,
+    onNavigateToPartner: (() -> Unit)? = null,
+    onNavigateToTranslator: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLanguageDropdown by remember { mutableStateOf(false) }
     var showNativeLanguageDropdown by remember { mutableStateOf(false) }
+    var internalMenuCollapsed by rememberSaveable { mutableStateOf(true) }
+    var showMoreModesMenu by remember { mutableStateOf(false) }
+
+    val isFullscreenMode = (uiState.currentMode == VocabularyMode.FLASHCARDS || uiState.currentMode == VocabularyMode.EXPLORER) &&
+        (onToggleMenuCollapsed?.let { isMenuCollapsed } ?: internalMenuCollapsed)
+
+    BackHandler(enabled = isFullscreenMode) {
+        onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+    }
 
     val strings = remember(uiState.nativeLanguage.code) { AppLocalization.getStrings(uiState.nativeLanguage.code) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = strings.navVocabulary,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
+            if (!isFullscreenMode) {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = strings.navVocabulary,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
 
-                        Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
-                        // Target Language selector chip
-                        Box {
-                            Surface(
-                                color = PrimaryIndigoLight,
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .clickable { showLanguageDropdown = true }
-                                    .testTag("vocabulary_language_picker")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                            // Target Language selector chip
+                            Box {
+                                Surface(
+                                    color = PrimaryIndigoLight,
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier
+                                        .clickable { showLanguageDropdown = true }
+                                        .testTag("vocabulary_language_picker")
                                 ) {
-                                    Text(
-                                        text = "${uiState.selectedLanguage.flag} ${uiState.selectedLanguage.code.uppercase()}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = PrimaryIndigo
-                                    )
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.ExpandMore,
-                                        contentDescription = "Select Learning Language",
-                                        tint = PrimaryIndigo,
-                                        modifier = Modifier.size(14.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${uiState.selectedLanguage.flag} ${uiState.selectedLanguage.code.uppercase()}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PrimaryIndigo
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.ExpandMore,
+                                            contentDescription = "Select Learning Language",
+                                            tint = PrimaryIndigo,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = showLanguageDropdown,
+                                    onDismissRequest = { showLanguageDropdown = false }
+                                ) {
+                                    SupportedLanguages.forEach { language ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(language.flag, fontSize = 20.sp)
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(language.name, fontWeight = FontWeight.Medium)
+                                                }
+                                            },
+                                            onClick = {
+                                                onLanguageSelected?.invoke(language) ?: viewModel.setLanguage(language)
+                                                showLanguageDropdown = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
 
-                            DropdownMenu(
-                                expanded = showLanguageDropdown,
-                                onDismissRequest = { showLanguageDropdown = false }
-                            ) {
-                                SupportedLanguages.forEach { language ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(language.flag, fontSize = 20.sp)
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(language.name, fontWeight = FontWeight.Medium)
-                                            }
-                                        },
-                                        onClick = {
-                                            onLanguageSelected?.invoke(language) ?: viewModel.setLanguage(language)
-                                            showLanguageDropdown = false
-                                        }
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "translates to",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(13.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            // Native Mother Tongue selector chip
+                            Box {
+                                Surface(
+                                    color = Color(0xFFEFF6FF),
+                                    shape = RoundedCornerShape(14.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                                    modifier = Modifier
+                                        .clickable { showNativeLanguageDropdown = true }
+                                        .testTag("vocabulary_native_language_picker")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${uiState.nativeLanguage.flag} ${uiState.nativeLanguage.code.uppercase()}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF1D4ED8)
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.ExpandMore,
+                                            contentDescription = "Select Native Language",
+                                            tint = Color(0xFF1D4ED8),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = showNativeLanguageDropdown,
+                                    onDismissRequest = { showNativeLanguageDropdown = false }
+                                ) {
+                                    Text(
+                                        text = "${strings.nativeLangTitle}:",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextSecondary,
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                                     )
+                                    SupportedLanguages.forEach { language ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(language.flag, fontSize = 20.sp)
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(language.name, fontWeight = if (language.code == uiState.nativeLanguage.code) FontWeight.Bold else FontWeight.Medium)
+                                                }
+                                            },
+                                            onClick = {
+                                                onNativeLanguageSelected?.invoke(language) ?: viewModel.setNativeLanguage(language)
+                                                showNativeLanguageDropdown = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "translates to",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(13.dp)
-                        )
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        // Native Mother Tongue selector chip
-                        Box {
-                            Surface(
-                                color = Color(0xFFEFF6FF),
-                                shape = RoundedCornerShape(14.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
-                                modifier = Modifier
-                                    .clickable { showNativeLanguageDropdown = true }
-                                    .testTag("vocabulary_native_language_picker")
+                    },
+                    actions = {
+                        if (uiState.currentMode == VocabularyMode.FLASHCARDS || uiState.currentMode == VocabularyMode.EXPLORER) {
+                            IconButton(
+                                onClick = {
+                                    onToggleMenuCollapsed?.invoke(true) ?: run { internalMenuCollapsed = true }
+                                },
+                                modifier = Modifier.testTag("action_collapse_to_upper_menu")
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${uiState.nativeLanguage.flag} ${uiState.nativeLanguage.code.uppercase()}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF1D4ED8)
-                                    )
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.ExpandMore,
-                                        contentDescription = "Select Native Language",
-                                        tint = Color(0xFF1D4ED8),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                            }
-
-                            DropdownMenu(
-                                expanded = showNativeLanguageDropdown,
-                                onDismissRequest = { showNativeLanguageDropdown = false }
-                            ) {
-                                Text(
-                                    text = "${strings.nativeLangTitle}:",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TextSecondary,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                Icon(
+                                    imageVector = Icons.Default.Fullscreen,
+                                    contentDescription = "Vollbild / Menü verkleinern",
+                                    tint = PrimaryIndigo
                                 )
-                                SupportedLanguages.forEach { language ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(language.flag, fontSize = 20.sp)
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(language.name, fontWeight = if (language.code == uiState.nativeLanguage.code) FontWeight.Bold else FontWeight.Medium)
-                                            }
-                                        },
-                                        onClick = {
-                                            onNativeLanguageSelected?.invoke(language) ?: viewModel.setNativeLanguage(language)
-                                            showNativeLanguageDropdown = false
-                                        }
-                                    )
-                                }
                             }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -239,161 +279,423 @@ fun WordLearningScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF8FAFC))
         ) {
-            // Overall 10,000 Word Progress Header Card
-            Surface(
-                color = Color.White,
-                shadowElevation = 1.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+            if (isFullscreenMode) {
+                // Compact upper area menu
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 2.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("compact_vocabulary_header")
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = strings.vocabTitle,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = "${uiState.masteredWordsCount}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigo
-                                )
-                                Text(
-                                    text = " / 10,000 ${strings.statsMastered}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondary,
-                                    modifier = Modifier.padding(bottom = 2.dp, start = 4.dp)
-                                )
-                            }
-                        }
-
-                        Surface(
-                            color = Color(0xFFFEF3C7),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = AccentAmber,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "${strings.stageLabel} ${uiState.currentStage} / 100",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF92400E)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    LinearProgressIndicator(
-                        progress = { (uiState.masteredWordsCount.toFloat() / 10000f).coerceIn(0.01f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = SuccessGreen,
-                        trackColor = Color(0xFFE2E8F0)
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Tier Badges Carousel (A1 to C2)
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        items(VocabularyTiers) { tier ->
-                            val isSelected = (uiState.currentTier.tierNumber == tier.tierNumber)
+                        // Left: Mode Selector Pills (Karten & Auflistung) + Overflow menu
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            // Pill 1: Karten (Flashcards)
+                            val isCards = uiState.currentMode == VocabularyMode.FLASHCARDS
                             Surface(
-                                color = if (isSelected) PrimaryIndigo else Color(0xFFF1F5F9),
-                                shape = RoundedCornerShape(10.dp),
+                                color = if (isCards) PrimaryIndigo else Color(0xFFF1F5F9),
+                                shape = RoundedCornerShape(20.dp),
                                 modifier = Modifier
-                                    .clickable { viewModel.selectTier(tier) }
-                                    .testTag("tier_chip_${tier.tierNumber}")
+                                    .clickable {
+                                        viewModel.setMode(VocabularyMode.FLASHCARDS)
+                                        onToggleMenuCollapsed?.invoke(true) ?: run { internalMenuCollapsed = true }
+                                    }
+                                    .testTag("compact_tab_flashcards")
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(text = tier.emoji, fontSize = 12.sp)
+                                    Icon(
+                                        imageVector = Icons.Default.ViewCarousel,
+                                        contentDescription = null,
+                                        tint = if (isCards) Color.White else PrimaryIndigo,
+                                        modifier = Modifier.size(16.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "${tier.cefrLevel} (#${tier.startRank}-${tier.endRank})",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else TextPrimary
+                                        text = strings.tabCards,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isCards) Color.White else TextPrimary
+                                    )
+                                }
+                            }
+
+                            // Pill 2: Auflistung (Explorer)
+                            val isExplorer = uiState.currentMode == VocabularyMode.EXPLORER
+                            Surface(
+                                color = if (isExplorer) PrimaryIndigo else Color(0xFFF1F5F9),
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier
+                                    .clickable {
+                                        viewModel.setMode(VocabularyMode.EXPLORER)
+                                        onToggleMenuCollapsed?.invoke(true) ?: run { internalMenuCollapsed = true }
+                                    }
+                                    .testTag("compact_tab_explorer")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.School,
+                                        contentDescription = null,
+                                        tint = if (isExplorer) Color.White else PrimaryIndigo,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = strings.tabExplorer,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isExplorer) Color.White else TextPrimary
+                                    )
+                                }
+                            }
+
+                            // More modes overflow menu button
+                            Box {
+                                Surface(
+                                    color = Color(0xFFF1F5F9),
+                                    shape = CircleShape,
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clickable { showMoreModesMenu = true }
+                                        .testTag("compact_more_modes_btn")
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "More Modes",
+                                            tint = TextSecondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = showMoreModesMenu,
+                                    onDismissRequest = { showMoreModesMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        leadingIcon = { Icon(Icons.Default.TableChart, null, tint = PrimaryIndigo) },
+                                        text = { Text(strings.tabVerbs) },
+                                        onClick = {
+                                            viewModel.setMode(VocabularyMode.VERBS)
+                                            onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                            showMoreModesMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        leadingIcon = { Icon(Icons.Default.FormatQuote, null, tint = PrimaryIndigo) },
+                                        text = { Text(strings.tabPhrases) },
+                                        onClick = {
+                                            viewModel.setMode(VocabularyMode.PHRASES)
+                                            onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                            showMoreModesMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        leadingIcon = { Icon(Icons.Default.Quiz, null, tint = PrimaryIndigo) },
+                                        text = { Text(strings.tabQuiz) },
+                                        onClick = {
+                                            viewModel.setMode(VocabularyMode.QUIZ)
+                                            onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                            showMoreModesMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        leadingIcon = { Icon(Icons.Default.GraphicEq, null, tint = PrimaryIndigo) },
+                                        text = { Text(strings.tabDrill) },
+                                        onClick = {
+                                            viewModel.setMode(VocabularyMode.PRONUNCIATION)
+                                            onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                            showMoreModesMenu = false
+                                        }
+                                    )
+                                    HorizontalDivider()
+                                    DropdownMenuItem(
+                                        leadingIcon = { Icon(Icons.Default.FullscreenExit, null, tint = TextSecondary) },
+                                        text = { Text("Menü erweitern / Details") },
+                                        onClick = {
+                                            onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                            showMoreModesMenu = false
+                                        }
+                                    )
+                                    if (onNavigateToPartner != null) {
+                                        DropdownMenuItem(
+                                            leadingIcon = { Icon(Icons.Default.ChatBubble, null, tint = TextSecondary) },
+                                            text = { Text(strings.navPartner) },
+                                            onClick = {
+                                                onNavigateToPartner()
+                                                showMoreModesMenu = false
+                                            }
+                                        )
+                                    }
+                                    if (onNavigateToTranslator != null) {
+                                        DropdownMenuItem(
+                                            leadingIcon = { Icon(Icons.Default.Translate, null, tint = TextSecondary) },
+                                            text = { Text(strings.navTranslator) },
+                                            onClick = {
+                                                onNavigateToTranslator()
+                                                showMoreModesMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Right: Language switcher chip + Expand button
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            // Compact Language chip
+                            Box {
+                                Surface(
+                                    color = PrimaryIndigoLight.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier
+                                        .clickable { showLanguageDropdown = true }
+                                        .testTag("compact_language_chip")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(uiState.selectedLanguage.flag, fontSize = 13.sp)
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = null,
+                                            tint = PrimaryIndigo,
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .padding(horizontal = 1.dp)
+                                        )
+                                        Text(uiState.nativeLanguage.flag, fontSize = 13.sp)
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = showLanguageDropdown,
+                                    onDismissRequest = { showLanguageDropdown = false }
+                                ) {
+                                    SupportedLanguages.forEach { language ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(language.flag, fontSize = 20.sp)
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(language.name, fontWeight = FontWeight.Medium)
+                                                }
+                                            },
+                                            onClick = {
+                                                onLanguageSelected?.invoke(language) ?: viewModel.setLanguage(language)
+                                                showLanguageDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Button to exit full screen and expand full menu
+                            Surface(
+                                color = Color(0xFFF1F5F9),
+                                shape = CircleShape,
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable {
+                                        onToggleMenuCollapsed?.invoke(false) ?: run { internalMenuCollapsed = false }
+                                    }
+                                    .testTag("compact_toggle_fullscreen_btn")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.FullscreenExit,
+                                        contentDescription = "Menü erweitern",
+                                        tint = PrimaryIndigo,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
                     }
                 }
-            }
+            } else {
+                // Overall 10,000 Word Progress Header Card
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = strings.vocabTitle,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = "${uiState.masteredWordsCount}",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryIndigo
+                                    )
+                                    Text(
+                                        text = " / 10,000 ${strings.statsMastered}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextSecondary,
+                                        modifier = Modifier.padding(bottom = 2.dp, start = 4.dp)
+                                    )
+                                }
+                            }
 
-            // Learning Mode Selector Tabs
-            PrimaryTabRow(
-                selectedTabIndex = uiState.currentMode.ordinal,
-                containerColor = Color.White,
-                contentColor = PrimaryIndigo
-            ) {
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.FLASHCARDS,
-                    onClick = { viewModel.setMode(VocabularyMode.FLASHCARDS) },
-                    text = { Text(strings.tabCards, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.ViewCarousel, contentDescription = "Flashcards", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_flashcards")
-                )
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.EXPLORER,
-                    onClick = { viewModel.setMode(VocabularyMode.EXPLORER) },
-                    text = { Text(strings.tabExplorer, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.School, contentDescription = "Explorer", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_explorer")
-                )
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.VERBS,
-                    onClick = { viewModel.setMode(VocabularyMode.VERBS) },
-                    text = { Text(strings.tabVerbs, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.TableChart, contentDescription = "Verbs", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_verbs")
-                )
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.PHRASES,
-                    onClick = { viewModel.setMode(VocabularyMode.PHRASES) },
-                    text = { Text(strings.tabPhrases, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.FormatQuote, contentDescription = "Phrases", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_phrases")
-                )
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.QUIZ,
-                    onClick = { viewModel.setMode(VocabularyMode.QUIZ) },
-                    text = { Text(strings.tabQuiz, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.Quiz, contentDescription = "Quiz", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_quiz")
-                )
-                Tab(
-                    selected = uiState.currentMode == VocabularyMode.PRONUNCIATION,
-                    onClick = { viewModel.setMode(VocabularyMode.PRONUNCIATION) },
-                    text = { Text(strings.tabDrill, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.GraphicEq, contentDescription = "Pronunciation", modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("tab_pronunciation")
-                )
+                            Surface(
+                                color = Color(0xFFFEF3C7),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = AccentAmber,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "${strings.stageLabel} ${uiState.currentStage} / 100",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF92400E)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LinearProgressIndicator(
+                            progress = { (uiState.masteredWordsCount.toFloat() / 10000f).coerceIn(0.01f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = SuccessGreen,
+                            trackColor = Color(0xFFE2E8F0)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Tier Badges Carousel (A1 to C2)
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(VocabularyTiers) { tier ->
+                                val isSelected = (uiState.currentTier.tierNumber == tier.tierNumber)
+                                Surface(
+                                    color = if (isSelected) PrimaryIndigo else Color(0xFFF1F5F9),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .clickable { viewModel.selectTier(tier) }
+                                        .testTag("tier_chip_${tier.tierNumber}")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(text = tier.emoji, fontSize = 12.sp)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "${tier.cefrLevel} (#${tier.startRank}-${tier.endRank})",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) Color.White else TextPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Learning Mode Selector Tabs
+                PrimaryTabRow(
+                    selectedTabIndex = uiState.currentMode.ordinal,
+                    containerColor = Color.White,
+                    contentColor = PrimaryIndigo
+                ) {
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.FLASHCARDS,
+                        onClick = {
+                            viewModel.setMode(VocabularyMode.FLASHCARDS)
+                            onToggleMenuCollapsed?.invoke(true) ?: run { internalMenuCollapsed = true }
+                        },
+                        text = { Text(strings.tabCards, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.ViewCarousel, contentDescription = "Flashcards", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_flashcards")
+                    )
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.EXPLORER,
+                        onClick = {
+                            viewModel.setMode(VocabularyMode.EXPLORER)
+                            onToggleMenuCollapsed?.invoke(true) ?: run { internalMenuCollapsed = true }
+                        },
+                        text = { Text(strings.tabExplorer, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.School, contentDescription = "Explorer", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_explorer")
+                    )
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.VERBS,
+                        onClick = { viewModel.setMode(VocabularyMode.VERBS) },
+                        text = { Text(strings.tabVerbs, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.TableChart, contentDescription = "Verbs", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_verbs")
+                    )
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.PHRASES,
+                        onClick = { viewModel.setMode(VocabularyMode.PHRASES) },
+                        text = { Text(strings.tabPhrases, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.FormatQuote, contentDescription = "Phrases", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_phrases")
+                    )
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.QUIZ,
+                        onClick = { viewModel.setMode(VocabularyMode.QUIZ) },
+                        text = { Text(strings.tabQuiz, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.Quiz, contentDescription = "Quiz", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_quiz")
+                    )
+                    Tab(
+                        selected = uiState.currentMode == VocabularyMode.PRONUNCIATION,
+                        onClick = { viewModel.setMode(VocabularyMode.PRONUNCIATION) },
+                        text = { Text(strings.tabDrill, fontSize = 13.sp, fontWeight = FontWeight.Bold) },
+                        icon = { Icon(Icons.Default.GraphicEq, contentDescription = "Pronunciation", modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.testTag("tab_pronunciation")
+                    )
+                }
             }
 
             // Content Area based on mode
@@ -493,7 +795,6 @@ fun WordLearningScreen(
                         }
 
                         VocabularyMode.QUIZ -> {
-                            val currentQ = uiState.quizQuestions.getOrNull(uiState.currentQuizIndex)
                             QuizView(
                                 questions = uiState.quizQuestions,
                                 currentIndex = uiState.currentQuizIndex,
@@ -506,7 +807,12 @@ fun WordLearningScreen(
                                 onNextQuestion = { viewModel.nextQuizQuestion() },
                                 onRestartQuiz = { viewModel.startNewQuiz() },
                                 onSpeak = { text -> viewModel.speakWord(text) },
-                                nativeLangCode = uiState.nativeLanguage.code
+                                nativeLangCode = uiState.nativeLanguage.code,
+                                currentDifficulty = uiState.currentQuizDifficulty,
+                                peakDifficulty = uiState.peakQuizDifficulty,
+                                adaptiveFeedback = uiState.quizAdaptiveFeedback,
+                                totalQuestionsCount = uiState.totalQuizQuestionsCount,
+                                quizSummary = uiState.quizSummary
                             )
                         }
 
